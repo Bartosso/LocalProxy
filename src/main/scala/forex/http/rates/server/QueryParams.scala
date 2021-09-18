@@ -1,8 +1,8 @@
-package forex.http.rates
+package forex.http.rates.server
 
 import forex.domain.Currency
-import org.http4s.{ ParseResult, QueryParamDecoder }
 import org.http4s.dsl.impl.ValidatingQueryParamDecoderMatcher
+import org.http4s.{ ParseResult, QueryParamDecoder }
 
 object QueryParams {
 

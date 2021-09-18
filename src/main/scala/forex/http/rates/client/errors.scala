@@ -1,4 +1,4 @@
-package forex.http.rates.clients
+package forex.http.rates.client
 
 object errors {
   sealed trait OneFrameRestClientErrors
