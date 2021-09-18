@@ -21,7 +21,7 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
   private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
     case GET -> Root :? FromQueryParam(from) +& ToQueryParam(to) =>
       parseGetRatesRequest(from, to).fold(
-        _ => BadRequest("invalid params"),
+        parsingErrors => BadRequest(parsingErrors),
         request =>
           rates.get(request).flatMap(Sync[F].fromEither).flatMap { rate =>
             Ok(rate.asGetApiResponse)
@@ -32,8 +32,17 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
   private def parseGetRatesRequest(
       maybeFrom: ValidatedNel[ParseFailure, Currency],
       maybeTo: ValidatedNel[ParseFailure, Currency]
-  ): ValidatedNel[ParseFailure, RatesProgramProtocol.GetRatesRequest] =
-    (maybeFrom, maybeTo).mapN(RatesProgramProtocol.GetRatesRequest)
+  ): ValidatedNel[ParseCurrencyError, RatesProgramProtocol.GetRatesRequest] = {
+    val from = handleCurrencyParseFailure(QueryParams.Names.FROM, maybeFrom)
+    val to   = handleCurrencyParseFailure(QueryParams.Names.TO, maybeTo)
+    (from, to).mapN(RatesProgramProtocol.GetRatesRequest)
+  }
+
+  private def handleCurrencyParseFailure(
+      paramName: String,
+      in: ValidatedNel[ParseFailure, Currency]
+  ): ValidatedNel[ParseCurrencyError, Currency] =
+    in.leftMap(_.map(parseFailure => ParseCurrencyError(paramName, parseFailure.sanitized)))
 
   val routes: HttpRoutes[F] = Router(
     prefixPath -> httpRoutes

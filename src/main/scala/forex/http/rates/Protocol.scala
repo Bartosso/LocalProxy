@@ -23,8 +23,12 @@ object Protocol {
       timestamp: Timestamp
   )
 
+  final case class ParseCurrencyError(field: String, message: String)
+
   implicit val currencyEncoder: Encoder[Currency] =
-    Encoder.instance[Currency]{in => Json.fromString(in.entryName)}
+    Encoder.instance[Currency] { in =>
+      Json.fromString(in.entryName)
+    }
 
   implicit val pairEncoder: Encoder[Pair] =
     deriveConfiguredEncoder[Pair]
@@ -34,5 +38,8 @@ object Protocol {
 
   implicit val responseEncoder: Encoder[GetApiResponse] =
     deriveConfiguredEncoder[GetApiResponse]
+
+  implicit val unknownCurrencyEncoder: Encoder[ParseCurrencyError] =
+    deriveConfiguredEncoder[ParseCurrencyError]
 
 }
