@@ -4,7 +4,7 @@ import enumeratum._
 
 sealed trait Currency extends EnumEntry.Uppercase
 
-object Currency extends Enum[Currency] {
+object Currency extends Enum[Currency] with CirceEnum[Currency] {
   val values: IndexedSeq[Currency] = findValues
 
   case object AUD extends Currency
