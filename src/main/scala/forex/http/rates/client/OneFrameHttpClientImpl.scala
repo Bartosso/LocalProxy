@@ -2,18 +2,26 @@ package forex.http.rates.client
 
 import cats.data.NonEmptyList
 import cats.effect.Sync
+import cats.syntax.applicative._
 import cats.syntax.either._
 import cats.syntax.functor._
 import forex.config.ClientConfig
-import forex.http.rates.client.errors.OneFrameRestClientErrors
+import forex.http.rates.client.errors._
 import forex.http.rates.Utils._
-import forex.http.rates.client.Protocol.In.GetCurrenciesValue
+import forex.http.rates.client.Protocol.In.{
+  ErrorJsonResponse,
+  GetCurrenciesSuccessfulResponse,
+  GetCurrenciesValue,
+  OneFrameResponse
+}
 import forex.http.rates.client.Protocol.Out.GetCurrenciesRequest
-import org.http4s.{ Header, Headers, Method, Request, Uri }
+import fs2.text
+import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
+import org.http4s.{ Header, Headers, Method, Request, Response, Status, Uri }
 import org.http4s.client.Client
 
 sealed trait OneFrameHttpClient[F[_]] {
-  def getCurrenciesRates(in: GetCurrenciesRequest): F[OneFrameRestClientErrors Either NonEmptyList[GetCurrenciesValue]]
+  def getCurrenciesRates(in: GetCurrenciesRequest): F[OneFrameHttpClientError Either NonEmptyList[GetCurrenciesValue]]
 }
 
 class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Client[F]) extends OneFrameHttpClient[F] {
@@ -22,11 +30,37 @@ class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Client[F]
 
   override def getCurrenciesRates(
       in: GetCurrenciesRequest
-  ): F[Either[OneFrameRestClientErrors, NonEmptyList[GetCurrenciesValue]]] = {
+  ): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrenciesValue]]] = {
     val uri     = targetUri.withQueryParam("pair", in.currencies.toList)
     val request = Request[F](Method.GET, uri, headers = headers)
-    client.expect[NonEmptyList[GetCurrenciesValue]](request).map(_.asRight)
+    doRequest(request)
   }
+
+  private def doRequest(request: Request[F]): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrenciesValue]]] =
+    client.run(request).use {
+      case Status.Successful(resp) => parseSuccessfulResponseBody(resp)
+      case Status.NotFound(_)      => NotFound.asLeft.pure[F].widen
+      case Status.Forbidden(_)     => EndpointForbidden.asLeft.pure[F].widen
+      case unknownResponse         => handleUnknownResponse(unknownResponse)
+    }
+
+  private def parseSuccessfulResponseBody(
+      resp: Response[F]
+  ): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrenciesValue]]] =
+    resp
+      .attemptAs[OneFrameResponse]
+      .map {
+        case GetCurrenciesSuccessfulResponse(in) =>
+          NonEmptyList.fromList(in).toRight[OneFrameHttpClientError](EmptyResponse)
+        case ErrorJsonResponse(error) => ErrorResponse(error).asLeft
+      }
+      .foldF(_ => handleUnknownResponse(resp), _.pure[F])
+
+  private def handleUnknownResponse[R](resp: Response[F]): F[Either[OneFrameHttpClientError, R]] = {
+    val body: F[String] = resp.body.through(text.utf8Decode).compile.string
+    body.map(UnknownResponse(_).asLeft[R])
+  }
+
 }
 
 object OneFrameHttpClientImpl {
