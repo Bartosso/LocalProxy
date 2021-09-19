@@ -8,7 +8,7 @@ object Dependencies {
     val http4s     = "0.21.22"
     val circe      = "0.13.0"
     val enumeratum = "1.7.0"
-    val pureConfig = "0.14.1"
+    val pureConfig = "0.16.0"
     val scalaCache = "0.28.0"
     val tofu       = "0.10.2"
 
@@ -37,6 +37,7 @@ object Dependencies {
     lazy val enumeratum         = "com.beachape" %% "enumeratum" % Versions.enumeratum
     lazy val enumeratumCirce    = "com.beachape" %% "enumeratum-circe" % Versions.enumeratum
     lazy val pureConfig         = "com.github.pureconfig" %% "pureconfig" % Versions.pureConfig
+    lazy val pureConfigCats     = "com.github.pureconfig" %% "pureconfig-cats-effect2" % "0.16.0"
     lazy val scalaCache         = "com.github.cb372" %% "scalacache-core" % Versions.scalaCache
     lazy val scalaCacheCE       = "com.github.cb372" %% "scalacache-cats-effect" % Versions.scalaCache
     lazy val coffeineCache      = "com.github.cb372" %% "scalacache-caffeine" % Versions.scalaCache

@@ -20,11 +20,12 @@ object Main extends IOApp {
 
 }
 
-class Application[F[_]: ConcurrentEffect: Timer: Mode] {
+class Application[F[_]: ConcurrentEffect: Timer: Mode: ContextShift] {
 
   def resource(ec: ExecutionContext): Resource[F, Unit] =
     for {
-      config <- Config.resource("app")
+      blocker <- Blocker[F]
+      config <- Config.resource("app", blocker)
       httpCli <- BlazeClientBuilder(ec).resource
       logs        = Logs.sync[F, F]
       oneFrameCli = OneFrameHttpClientImpl(config.clientConfig, httpCli)

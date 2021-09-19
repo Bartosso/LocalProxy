@@ -65,6 +65,7 @@ libraryDependencies ++= Seq(
   Libraries.enumeratum,
   Libraries.enumeratumCirce,
   Libraries.pureConfig,
+  Libraries.pureConfigCats,
   Libraries.scalaCache,
   Libraries.scalaCacheCE,
   Libraries.coffeineCache,

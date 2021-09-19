@@ -3,7 +3,8 @@ package forex.rates.interpreters
 import cats.effect.IO
 import cats.syntax.either._
 import forex.domain.Rate.Pair
-import forex.domain.{ Currency, Price, Rate, Timestamp }
+import forex.domain.{ Currency, Rate }
+import forex.rates.interpreters.Util.buildSomeRate
 import forex.services.rates.Utils.PairOps
 import forex.services.rates.errors.Error.{ FromAndToAreTheSame, NoValueForKey }
 import forex.services.rates.interpreters.OneFrameCachedImpl
@@ -47,11 +48,6 @@ class OneFrameCachedImplSpec extends AnyWordSpec with Matchers {
         .unsafeRunSync()
       mustBeLeft shouldBe FromAndToAreTheSame.asLeft
     }
-  }
-
-  private def buildSomeRate(from: Currency = Currency.CAD, to: Currency = Currency.AUD) = {
-    val pair = Pair(from, to)
-    Rate(pair, Price(BigDecimal(342)), Timestamp.now)
   }
 
 }
