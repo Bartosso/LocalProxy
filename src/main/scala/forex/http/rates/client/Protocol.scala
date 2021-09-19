@@ -2,8 +2,8 @@ package forex.http.rates.client
 
 import cats.data.NonEmptyList
 import cats.syntax.functor._
-import forex.domain.{ Currency, Timestamp }
-import forex.http.rates.Utils._
+import forex.domain.{ Currency, Price, Timestamp }
+import forex.domain.Utils._
 import io.circe.Decoder
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
@@ -25,25 +25,25 @@ object Protocol {
 
     sealed trait OneFrameResponse
 
-    final case class GetCurrenciesValue(from: Currency,
-                                        to: Currency,
-                                        bid: BigDecimal,
-                                        ask: BigDecimal,
-                                        price: BigDecimal,
-                                        timeStamp: Timestamp)
+    final case class GetCurrencyValue(from: Currency,
+                                      to: Currency,
+                                      bid: BigDecimal,
+                                      ask: BigDecimal,
+                                      price: Price,
+                                      timeStamp: Timestamp)
 
-    final case class GetCurrenciesSuccessfulResponse(in: List[GetCurrenciesValue]) extends OneFrameResponse
+    final case class GetCurrenciesSuccessfulResponse(in: List[GetCurrencyValue]) extends OneFrameResponse
 
     final case class ErrorJsonResponse(error: String) extends OneFrameResponse
 
-    implicit val getCurrenciesValueDecoder: Decoder[GetCurrenciesValue] =
-      deriveConfiguredDecoder[GetCurrenciesValue]
+    implicit val getCurrenciesValueDecoder: Decoder[GetCurrencyValue] =
+      deriveConfiguredDecoder[GetCurrencyValue]
 
     implicit val errorResponseDecoder: Decoder[ErrorJsonResponse] =
       deriveConfiguredDecoder[ErrorJsonResponse]
 
     implicit val getCurrenciesSuccessfulResponse: Decoder[GetCurrenciesSuccessfulResponse] =
-      Decoder[List[GetCurrenciesValue]].map(GetCurrenciesSuccessfulResponse)
+      Decoder[List[GetCurrencyValue]].map(GetCurrenciesSuccessfulResponse)
 
     implicit val oneFrameResponseDecoder: Decoder[OneFrameResponse] =
       getCurrenciesSuccessfulResponse.widen or errorResponseDecoder.widen

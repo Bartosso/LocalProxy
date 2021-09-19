@@ -7,11 +7,11 @@ import cats.syntax.either._
 import cats.syntax.functor._
 import forex.config.ClientConfig
 import forex.http.rates.client.errors._
-import forex.http.rates.Utils._
+import forex.domain.Utils._
 import forex.http.rates.client.Protocol.In.{
   ErrorJsonResponse,
   GetCurrenciesSuccessfulResponse,
-  GetCurrenciesValue,
+  GetCurrencyValue,
   OneFrameResponse
 }
 import forex.http.rates.client.Protocol.Out.GetCurrenciesRequest
@@ -21,7 +21,7 @@ import org.http4s.{ Header, Headers, Method, Request, Response, Status, Uri }
 import org.http4s.client.Client
 
 sealed trait OneFrameHttpClient[F[_]] {
-  def getCurrenciesRates(in: GetCurrenciesRequest): F[OneFrameHttpClientError Either NonEmptyList[GetCurrenciesValue]]
+  def getCurrenciesRates(in: GetCurrenciesRequest): F[OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]]
 }
 
 class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Client[F]) extends OneFrameHttpClient[F] {
@@ -30,13 +30,13 @@ class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Client[F]
 
   override def getCurrenciesRates(
       in: GetCurrenciesRequest
-  ): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrenciesValue]]] = {
+  ): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] = {
     val uri     = targetUri.withQueryParam("pair", in.currencies.toList)
     val request = Request[F](Method.GET, uri, headers = headers)
     doRequest(request)
   }
 
-  private def doRequest(request: Request[F]): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrenciesValue]]] =
+  private def doRequest(request: Request[F]): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] =
     client.run(request).use {
       case Status.Successful(resp) => parseSuccessfulResponseBody(resp)
       case Status.NotFound(_)      => NotFound.asLeft.pure[F].widen
@@ -46,7 +46,7 @@ class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Client[F]
 
   private def parseSuccessfulResponseBody(
       resp: Response[F]
-  ): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrenciesValue]]] =
+  ): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] =
     resp
       .attemptAs[OneFrameResponse]
       .map {

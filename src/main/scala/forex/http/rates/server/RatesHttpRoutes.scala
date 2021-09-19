@@ -7,7 +7,7 @@ import cats.syntax.flatMap._
 import forex.domain.Currency
 import forex.programs.RatesProgram
 import forex.programs.rates.{ Protocol => RatesProgramProtocol }
-import forex.http.rates.Utils._
+import forex.domain.Utils._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
 import org.http4s.{ HttpRoutes, ParseFailure }

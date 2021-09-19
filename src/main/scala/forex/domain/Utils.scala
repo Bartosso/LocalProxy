@@ -1,11 +1,11 @@
-package forex.http.rates
+package forex.domain
 
 import cats.effect.Sync
-import io.circe.{ Decoder, Encoder }
 import io.circe.generic.extras.decoding.{ EnumerationDecoder, UnwrappedDecoder }
 import io.circe.generic.extras.encoding.{ EnumerationEncoder, UnwrappedEncoder }
-import org.http4s.{ EntityDecoder, EntityEncoder }
+import io.circe.{ Decoder, Encoder }
 import org.http4s.circe.{ jsonEncoderOf, jsonOf }
+import org.http4s.{ EntityDecoder, EntityEncoder }
 
 object Utils {
 

@@ -10,6 +10,7 @@ object Dependencies {
     val circe      = "0.13.0"
     val enumeratum = "1.7.0"
     val pureConfig = "0.14.1"
+    val scalaCache = "0.28.0"
 
     val kindProjector  = "0.10.3"
     val logback        = "1.2.3"
@@ -37,6 +38,11 @@ object Dependencies {
     lazy val enumeratum      = "com.beachape" %% "enumeratum" % Versions.enumeratum
     lazy val enumeratumCirce = "com.beachape" %% "enumeratum-circe" % Versions.enumeratum
     lazy val pureConfig      = "com.github.pureconfig" %% "pureconfig" % Versions.pureConfig
+    lazy val scalaCache      = "com.github.cb372" %% "scalacache-core" % Versions.scalaCache
+    lazy val scalaCacheCE    = "com.github.cb372" %% "scalacache-cats-effect" % Versions.scalaCache
+    lazy val coffeineCache   = "com.github.cb372" %% "scalacache-caffeine" % Versions.scalaCache
+    lazy val rediseCache     = "com.github.cb372" %% "scalacache-redis" % Versions.scalaCache
+    lazy val cacheCirce      = "com.github.cb372" %% "scalacache-circe" % Versions.scalaCache
 
     // Compiler plugins
     lazy val kindProjector = "org.typelevel" %% "kind-projector" % Versions.kindProjector

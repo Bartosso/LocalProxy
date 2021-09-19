@@ -2,7 +2,7 @@ package forex.http.rates.server
 
 import forex.domain.Rate.Pair
 import forex.domain.{ Currency, Price, Rate, Timestamp }
-import forex.http.rates.Utils._
+import forex.domain.Utils._
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
 import io.circe.{ Encoder, Json }
