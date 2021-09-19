@@ -12,8 +12,10 @@ import cats.implicits.catsSyntaxApplicativeId
 import com.github.benmanes.caffeine.cache.Caffeine
 import forex.config.{ CacheConfig, OneFrameConfig }
 import forex.domain.{ Currency, Rate, Timestamp }
+import forex.http.rates.client.Protocol.In
 import forex.http.rates.client.Protocol.Out.{ GetCurrenciesRequest, GetCurrencyValuePair }
 import forex.http.rates.client.algebra.OneFrameHttpClient
+import forex.http.rates.client.errors
 import forex.services.rates.Utils.GetCurrenciesValueOps
 import forex.services.rates.interpreters.CacheSynchronizationImpl.allPairs
 import forex.services.rates.{ CacheSynchronizationAlgebra, OneFrameAlgebra }
@@ -26,9 +28,10 @@ import tofu.syntax.logging._
 
 import scala.concurrent.duration.{ DurationInt, FiniteDuration }
 
-private class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLogging[*[_], OneFrameAlgebra[
-  F
-]]](
+private[interpreters] class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLogging[*[_],
+                                                                                                   OneFrameAlgebra[
+                                                                                                     F
+                                                                                                   ]]](
     cache: AbstractCache[Rate],
     oneFrameClient: OneFrameHttpClient[F],
     cacheTtl: FiniteDuration,
@@ -39,43 +42,43 @@ private class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLog
     info"Starting update of the cache values" >>
       oneFrameClient
         .getCurrenciesRates(GetCurrenciesRequest(allPairs))
-        .flatMap(
-          _.fold(
-            err => error"Can't update cache values, error - $err",
-            result =>
-              result.toList
-                .traverse { value =>
-                  val key = value.toKeyString
-                  cache.put(key)(value.toRate, Some(cacheTtl))
-                } >> info"Cache update successfully done"
-          )
-        )
+        .flatMap(handleClientResult)
 
   private val updateCacheLoop: F[Unit] = (Timer[F].sleep(refreshRate) >> updateCacheFun).foreverM[Unit]
+
+  private val synchronizationInit =
+    info"starting cache synchronization" >> cache
+      .get(allPairs.head.toKeyString)
+      .recoverWith { err =>
+        // Somehow if caffeine is used and there is no value - I got error
+        errorCause"Cache is empty" (err).as(None)
+      }
+      .flatMap(_.fold(updateCacheFun)(updateCacheIfItsOld))
+
+  private def handleClientResult(
+      in: Either[errors.OneFrameHttpClientError, NonEmptyList[In.GetCurrencyValue]]
+  ): F[Unit] =
+    in.fold(
+      err => error"Can't update cache values, error - $err",
+      results =>
+        results.toList.traverse { value =>
+          cache.put(value.toKeyString)(value.toRate, Some(cacheTtl))
+        } >> info"Cache update successfully done"
+    )
 
   private def updateCacheIfItsOld(actualRate: Rate): F[Unit] = {
     val now      = Timestamp.now
     val rateTime = actualRate.timestamp
-    // If we take default limit 1000 requests per day - we can perform a request every 86.4 seconds, soo 100 should be enough.
+    // If we take the default limit is 1000 requests per day - we can perform a request every 86.4 seconds
+    // so 100 seconds should be enough
     val threshold           = cacheTtl / 3
     val latestSyncThreshold = now.value.minusSeconds(threshold.toSeconds)
     if (rateTime.value.isBefore(latestSyncThreshold)) updateCacheFun
     else ().pure[F]
   }
 
-  override def start(): Resource[F, AbstractCache[Rate]] = {
-    val synchronizationInit =
-      info"starting cache synchronization" >> cache
-        .get(allPairs.head.toKeyString)
-        .recoverWith { err =>
-          // Somehow if caffeine is used and there is no value - I got error
-          errorCause"Cache is empty" (err).as(None)
-        }
-        .flatMap {
-          _.fold(updateCacheFun)(updateCacheIfItsOld)
-        }
+  override def start(): Resource[F, AbstractCache[Rate]] =
     Resource.eval(synchronizationInit) >> updateCacheLoop.background.as(cache)
-  }
 }
 
 object CacheSynchronizationImpl {
