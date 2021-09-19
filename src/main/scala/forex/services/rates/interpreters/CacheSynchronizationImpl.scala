@@ -54,8 +54,9 @@ private class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLog
   private val updateCacheLoop: F[Unit] = (Timer[F].sleep(refreshRate) >> updateCacheFun).foreverM[Unit]
 
   private def updateCacheIfItsOld(actualRate: Rate): F[Unit] = {
-    val now                 = Timestamp.now
-    val rateTime            = actualRate.timestamp
+    val now      = Timestamp.now
+    val rateTime = actualRate.timestamp
+    // If we take default limit 1000 requests per day - we can perform a request every 86.4 seconds, soo 100 should be enough.
     val threshold           = cacheTtl / 3
     val latestSyncThreshold = now.value.minusSeconds(threshold.toSeconds)
     if (rateTime.value.isBefore(latestSyncThreshold)) updateCacheFun
@@ -67,6 +68,7 @@ private class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLog
       info"starting cache synchronization" >> cache
         .get(allPairs.head.toKeyString)
         .recoverWith { err =>
+          // Somehow if caffeine is used and there is no value - I got error
           errorCause"Cache is empty" (err).as(None)
         }
         .flatMap {

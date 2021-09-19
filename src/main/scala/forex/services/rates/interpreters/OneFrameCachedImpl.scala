@@ -1,15 +1,17 @@
 package forex.services.rates.interpreters
 
 import cats.MonadThrow
-import cats.syntax.apply._
 import cats.syntax.applicativeError._
+import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import cats.syntax.traverse._
 import cats.effect.Resource
 import forex.domain.Rate
-import forex.services.rates.errors.Error.OneFrameLookupFailed
+import forex.services.rates.errors.Error.{ FromAndToAreTheSame, NoValueForKey }
 import forex.services.rates.{ errors, OneFrameAlgebra }
 import forex.services.rates.Utils._
+import forex.services.rates.errors.Error
 import scalacache.{ AbstractCache, Mode }
 import tofu.logging.{ Logs, ServiceLogging }
 import tofu.syntax.logging._
@@ -18,21 +20,28 @@ private class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], On
     cache: AbstractCache[Rate]
 ) extends OneFrameAlgebra[F] {
 
-  override def get(pair: Rate.Pair): F[Either[errors.Error, Rate]] = {
-    val key = pair.toKeyString
-    debug"getting $key from the cache" *> cache
-      .get(key)
+  private def getKayAndCutMeaningless(pair: Rate.Pair): Either[Error, String] =
+    if (pair.from == pair.to) FromAndToAreTheSame.asLeft[String]
+    else pair.toKeyString.asRight[Error]
+
+  private def getByKey(pairKey: String): F[Either[Error, Rate]] =
+    debug"getting $pairKey from the cache" >> cache
+      .get(pairKey)
       .recoverWith { err =>
+        // Somehow if caffeine is used and there is no value - I got error
         errorCause"Cache is empty" (err).as(None)
       }
-      .map[Either[errors.Error, Rate]](_.toRight(OneFrameLookupFailed("Got no value")))
+      .map[Either[errors.Error, Rate]](_.toRight(NoValueForKey(pairKey)))
       .flatTap(
-        res =>
-          res.fold(
-            err => error"can't get $key from the cache, error - $err",
-            _ => debug"getting $key from the cache successfully done"
+        _.fold(
+          err => error"can't get $pairKey from the cache, error - $err",
+          _ => debug"getting $pairKey from the cache successfully done"
         )
       )
+
+  override def get(pair: Rate.Pair): F[Either[errors.Error, Rate]] = {
+    val maybeKey = getKayAndCutMeaningless(pair)
+    maybeKey.flatTraverse(getByKey)
   }
 }
 

@@ -8,9 +8,11 @@ import forex.domain.Currency
 import forex.programs.RatesProgram
 import forex.programs.rates.{ Protocol => RatesProgramProtocol }
 import forex.domain.Utils._
+import forex.programs.rates.errors.Error
+import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
-import org.http4s.{ HttpRoutes, ParseFailure }
+import org.http4s.{ HttpRoutes, ParseFailure, Response }
 
 class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
 
@@ -24,11 +26,14 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
     case GET -> Root :? FromQueryParam(from) +& ToQueryParam(to) =>
       parseGetRatesRequest(from, to).fold(
         parsingErrors => BadRequest(parsingErrors),
-        request =>
-          rates.get(request).flatMap(Sync[F].fromEither).flatMap { rate =>
-            Ok(rate.asGetApiResponse)
-        }
+        request => rates.get(request).flatMap(_.fold(handleServiceErrors, rate => Ok(rate.asGetApiResponse)))
       )
+  }
+
+  private def handleServiceErrors: PartialFunction[Error, F[Response[F]]] = {
+    case Error.RateLookupUnreachable => BadGateway()
+    // Like in our target One Frame Api we return empty list in that case
+    case Error.MeaninglessRequest => Ok(List[Unit]())
   }
 
   private def parseGetRatesRequest(
