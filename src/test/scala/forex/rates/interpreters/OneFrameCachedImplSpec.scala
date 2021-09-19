@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.syntax.either._
 import forex.domain.Rate.Pair
 import forex.domain.{ Currency, Rate }
-import forex.rates.interpreters.Util.buildSomeRate
+import forex.Util.buildSomeRate
 import forex.services.rates.Utils.PairOps
 import forex.services.rates.errors.Error.{ FromAndToAreTheSame, NoValueForKey }
 import forex.services.rates.interpreters.OneFrameCachedImpl

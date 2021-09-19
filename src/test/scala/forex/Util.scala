@@ -1,4 +1,4 @@
-package forex.rates.interpreters
+package forex
 
 import forex.domain.Rate.Pair
 import forex.domain.{ Currency, Price, Rate, Timestamp }
