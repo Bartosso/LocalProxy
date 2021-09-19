@@ -14,7 +14,9 @@ object Protocol {
   implicit val configuration: Configuration = Configuration.default.withSnakeCaseMemberNames
 
   object Out {
-    final case class GetCurrencyValuePair(from: Currency, to: Currency)
+    final case class GetCurrencyValuePair(from: Currency, to: Currency) {
+      def toKeyString: String = s"${from.entryName}${to.entryName}"
+    }
     final case class GetCurrenciesRequest(currencies: NonEmptyList[GetCurrencyValuePair])
 
     implicit val queryEncoder: QueryParamEncoder[GetCurrencyValuePair] = (value: GetCurrencyValuePair) =>

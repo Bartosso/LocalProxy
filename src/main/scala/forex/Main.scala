@@ -5,6 +5,7 @@ import cats.effect._
 import forex.config._
 import forex.http.rates.client.impl.OneFrameHttpClientImpl
 import forex.services.rates.Interpreters
+import forex.services.rates.interpreters.CacheSynchronizationImpl
 import fs2.Stream
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -28,7 +29,8 @@ class Application[F[_]: ConcurrentEffect: Timer: Mode] {
       httpCli <- BlazeClientBuilder(ec).stream
       logs        = Logs.sync[F, F]
       oneFrameCli = OneFrameHttpClientImpl(config.clientConfig, httpCli)
-      oneFrameRestService <- Stream.resource(Interpreters.cachedImpl(oneFrameCli, config.oneFrameConfig, logs))
+      cache <- Stream.resource(CacheSynchronizationImpl.createSyncedCache(oneFrameCli, config.oneFrameConfig, logs))
+      oneFrameRestService <- Stream.resource(Interpreters.cachedImpl(cache, logs))
       module = new Module[F](config, oneFrameRestService)
       _ <- BlazeServerBuilder[F](ec)
             .bindHttp(config.http.port, config.http.host)
