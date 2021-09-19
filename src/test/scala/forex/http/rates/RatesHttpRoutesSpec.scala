@@ -17,6 +17,7 @@ import io.circe.Decoder
 import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
 import org.http4s.FormDataDecoder.formEntityDecoder
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
+import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.{ Request, Status, Uri }
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -27,7 +28,7 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
     deriveConfiguredDecoder[ParseCurrencyError]
   implicit val responseDecoder: Decoder[GetApiResponse] = deriveConfiguredDecoder[GetApiResponse]
 
-  val dummyUri: Uri   = Uri.unsafeFromString("/rates?from=JPY&to=USD")
+  val dummyUri: Uri   = uri"/rates?from=JPY&to=USD"
   val dummyRate: Rate = buildSomeRate()
 
   "RatesHttpRoutes" should {
@@ -52,7 +53,7 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
     }
 
     "return error if user passes unknown currencies" in {
-      val unknownCurrenciesUri = Uri.unsafeFromString("/rates?from=IDontKnow&to=OrMaybeIDo")
+      val unknownCurrenciesUri = uri"/rates?from=IDontKnow&to=OrMaybeIDo"
       val endpoints            = new RatesHttpRoutes(dummyProgramWithGetResult(dummyRate.asRight)).routes
 
       val maybeResult = endpoints.run(Request(uri = unknownCurrenciesUri)).value.unsafeRunSync()
@@ -66,7 +67,7 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
     }
 
     "return error if user passes wrong `from` currency" in {
-      val unknownCurrenciesUri = Uri.unsafeFromString("/rates?from=IDontKnow&to=USD")
+      val unknownCurrenciesUri = uri"/rates?from=IDontKnow&to=USD"
       val endpoints            = new RatesHttpRoutes(dummyProgramWithGetResult(dummyRate.asRight)).routes
 
       val maybeResult = endpoints.run(Request(uri = unknownCurrenciesUri)).value.unsafeRunSync()
@@ -77,7 +78,7 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
     }
 
     "return error if user passes wrong `to` currency" in {
-      val unknownCurrenciesUri = Uri.unsafeFromString("/rates?from=USD&to=SomethingInvalid")
+      val unknownCurrenciesUri = uri"/rates?from=USD&to=SomethingInvalid"
       val endpoints            = new RatesHttpRoutes(dummyProgramWithGetResult(dummyRate.asRight)).routes
 
       val maybeResult = endpoints.run(Request(uri = unknownCurrenciesUri)).value.unsafeRunSync()
@@ -88,7 +89,7 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
     }
 
     "return value when everything is ok" in {
-      val unknownCurrenciesUri = Uri.unsafeFromString("/rates?from=USD&to=EUR")
+      val unknownCurrenciesUri = uri"/rates?from=USD&to=EUR"
       val endpoints            = new RatesHttpRoutes(dummyProgramWithGetResult(dummyRate.asRight)).routes
 
       val maybeResult = endpoints.run(Request(uri = unknownCurrenciesUri)).value.unsafeRunSync()
