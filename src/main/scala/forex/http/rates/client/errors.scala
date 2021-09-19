@@ -1,6 +1,10 @@
 package forex.http.rates.client
 
+import derevo.derive
+import tofu.logging.derivation.loggable
+
 object errors {
+  @derive(loggable)
   sealed trait OneFrameHttpClientError
 
   case object NotFound extends OneFrameHttpClientError

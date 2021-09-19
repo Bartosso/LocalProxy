@@ -34,6 +34,7 @@ scalacOptions ++= Seq(
   "-Ywarn-value-discard", // Warn when non-Unit expression results are unused.
   "-Xlint:constant", // Evaluation of a constant arithmetic expression results in an error.
   "-Ywarn-extra-implicit", // Warn when more than one implicit parameter section is defined.
+  "-Ymacro-annotations", // Enables macro annotations
   "-Ywarn-macros:after", // Fixes false warnings associated with generic derivations
   "-Ywarn-unused:implicits", // Warn if an implicit parameter is unused.
   "-Ywarn-unused:imports", // Warn if an import selector is not referenced.
@@ -70,6 +71,8 @@ libraryDependencies ++= Seq(
   Libraries.coffeineCache,
   Libraries.rediseCache,
   Libraries.cacheCirce,
+  Libraries.tofuLogs,
+  Libraries.tofuLogsDerivation,
   Libraries.logback,
   Libraries.scalaTest      % Test,
   Libraries.scalaCheck     % Test,

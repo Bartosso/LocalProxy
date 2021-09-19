@@ -1,4 +1,4 @@
-package forex.http.rates.client
+package forex.http.rates.client.impl
 
 import cats.data.NonEmptyList
 import cats.effect.Sync
@@ -15,16 +15,13 @@ import forex.http.rates.client.Protocol.In.{
   OneFrameResponse
 }
 import forex.http.rates.client.Protocol.Out.GetCurrenciesRequest
+import forex.http.rates.client.algebra.OneFrameHttpClient
 import fs2.text
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.{ Header, Headers, Method, Request, Response, Status, Uri }
 import org.http4s.client.Client
 
-sealed trait OneFrameHttpClient[F[_]] {
-  def getCurrenciesRates(in: GetCurrenciesRequest): F[OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]]
-}
-
-class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Client[F]) extends OneFrameHttpClient[F] {
+final class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Client[F]) extends OneFrameHttpClient[F] {
   private val targetUri = Uri.unsafeFromString(s"http://${config.targetHost}:${config.targetPort}/rates")
   private val headers   = Headers.of(Header("token", config.token))
 
