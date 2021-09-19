@@ -5,7 +5,6 @@ object Dependencies {
   object Versions {
     val cats       = "2.6.1"
     val catsEffect = "2.5.3"
-    val fs2        = "2.5.4"
     val http4s     = "0.21.22"
     val circe      = "0.13.0"
     val enumeratum = "1.7.0"
@@ -26,7 +25,6 @@ object Dependencies {
 
     lazy val cats       = "org.typelevel" %% "cats-core"   % Versions.cats
     lazy val catsEffect = "org.typelevel" %% "cats-effect" % Versions.catsEffect
-    lazy val fs2        = "co.fs2"        %% "fs2-core"    % Versions.fs2
 
     lazy val http4sDsl          = http4s("http4s-dsl")
     lazy val http4sServer       = http4s("http4s-blaze-server")

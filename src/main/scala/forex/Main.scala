@@ -6,7 +6,6 @@ import forex.config._
 import forex.http.rates.client.impl.OneFrameHttpClientImpl
 import forex.services.rates.Interpreters
 import forex.services.rates.interpreters.CacheSynchronizationImpl
-import fs2.Stream
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.server.blaze.BlazeServerBuilder
 import scalacache.Mode
@@ -16,26 +15,26 @@ object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
     implicit val mode: Mode[IO] = scalacache.CatsEffect.modes.async
-    new Application[IO].stream(executionContext).compile.drain.as(ExitCode.Success)
+    new Application[IO].resource(executionContext).use(_ => IO.never)
   }
 
 }
 
 class Application[F[_]: ConcurrentEffect: Timer: Mode] {
 
-  def stream(ec: ExecutionContext): Stream[F, Unit] =
+  def resource(ec: ExecutionContext): Resource[F, Unit] =
     for {
-      config <- Config.stream("app")
-      httpCli <- BlazeClientBuilder(ec).stream
+      config <- Config.resource("app")
+      httpCli <- BlazeClientBuilder(ec).resource
       logs        = Logs.sync[F, F]
       oneFrameCli = OneFrameHttpClientImpl(config.clientConfig, httpCli)
-      cache <- Stream.resource(CacheSynchronizationImpl.createSyncedCache(oneFrameCli, config.oneFrameConfig, logs))
-      oneFrameRestService <- Stream.resource(Interpreters.cachedImpl(cache, logs))
+      cache <- CacheSynchronizationImpl.createSyncedCache(oneFrameCli, config.oneFrameConfig, logs)
+      oneFrameRestService <- Interpreters.cachedImpl(cache, logs)
       module = new Module[F](config, oneFrameRestService)
       _ <- BlazeServerBuilder[F](ec)
             .bindHttp(config.http.port, config.http.host)
             .withHttpApp(module.httpApp)
-            .serve
+            .resource
     } yield ()
 
 }
