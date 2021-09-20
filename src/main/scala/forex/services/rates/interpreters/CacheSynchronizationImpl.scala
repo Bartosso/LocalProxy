@@ -55,13 +55,17 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLoggi
   private def handleClientResult(
       in: Either[errors.OneFrameHttpClientError, NonEmptyList[In.GetCurrencyValue]]
   ): F[Unit] =
-    in.fold(
-      err => error"Can't update cache values, error - $err",
-      results =>
-        results.toList.traverse { value =>
-          cache.put(value.toKeyString)(value.toRate, Some(cacheTtl))
-        } >> info"Cache update successfully done"
-    )
+    in.fold(logClientError, updateCacheWithValues)
+
+  private def updateCacheWithValues(values: NonEmptyList[In.GetCurrencyValue]): F[Unit] =
+    values.toList.traverse { value =>
+      cache.put(value.toKeyString)(value.toRate, Some(cacheTtl))
+    } >> info"Cache update successfully done"
+
+  private def logClientError: PartialFunction[errors.OneFrameHttpClientError, F[Unit]] = {
+    case errors.ClientError(error) => errorCause"Can't update cache values, client error" (error)
+    case error                     => error"Can't update cache values, error - $error"
+  }
 
   private def updateCacheIfItsOld(actualRate: Rate): F[Unit] = {
     val now                 = Timestamp.now
