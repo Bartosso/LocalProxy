@@ -1,10 +1,10 @@
-package forex.rates.interpreters
+package forex.services.rates.interpreters
 
 import cats.effect.IO
 import cats.syntax.either._
+import forex.Generators
 import forex.domain.Rate.Pair
 import forex.domain.{ Currency, Rate }
-import forex.Util.buildSomeRate
 import forex.services.rates.Utils.PairOps
 import forex.services.rates.errors.Error.{ FromAndToAreTheSame, NoValueForKey }
 import forex.services.rates.interpreters.OneFrameCachedImpl
@@ -21,7 +21,7 @@ class OneFrameCachedImplSpec extends AnyWordSpec with Matchers {
   "OneFrameCachedImpl" should {
     "work fine when cache have the value" in {
       val testCache     = CaffeineCache[Rate]
-      val insertedValue = buildSomeRate()
+      val insertedValue = Generators.rate()
       testCache.put(insertedValue.pair.toKeyString)(insertedValue)
 
       val mustBeRight = OneFrameCachedImpl[IO](testCache, testLogs)
@@ -32,7 +32,7 @@ class OneFrameCachedImplSpec extends AnyWordSpec with Matchers {
 
     "return error if there is no value in the cache" in {
       val testCache = CaffeineCache[Rate]
-      val someValue = buildSomeRate()
+      val someValue = Generators.rate()
 
       val mustBeLeft = OneFrameCachedImpl[IO](testCache, testLogs)
         .use(algebra => algebra.get(someValue.pair))

@@ -16,7 +16,7 @@ import scalacache.{ AbstractCache, Mode }
 import tofu.logging.{ Logs, ServiceLogging }
 import tofu.syntax.logging._
 
-private[interpreters] class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], OneFrameAlgebra[F]]](
+final class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], OneFrameAlgebra[F]]](
     cache: AbstractCache[Rate]
 ) extends OneFrameAlgebra[F] {
 

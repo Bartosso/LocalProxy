@@ -2,12 +2,12 @@ package forex.http.rates
 
 import cats.effect.IO
 import cats.syntax.either._
+import forex.Generators
 import forex.domain.Rate
 import forex.http.rates.server.RatesHttpRoutes
 import forex.programs.RatesProgram
 import forex.programs.rates.errors.Error.{ MeaninglessRequest, RateLookupUnreachable }
 import forex.programs.rates.errors
-import forex.Util._
 import forex.domain.Utils.jsonDecoder
 import forex.http.rates.server.Converters.GetApiResponseOps
 import forex.http.rates.server.Protocol.GetApiResponse
@@ -29,7 +29,7 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
   implicit val responseDecoder: Decoder[GetApiResponse] = deriveConfiguredDecoder[GetApiResponse]
 
   val dummyUri: Uri   = uri"/rates?from=JPY&to=USD"
-  val dummyRate: Rate = buildSomeRate()
+  val dummyRate: Rate = Generators.rate()
 
   "RatesHttpRoutes" should {
     "return empty list request (as an original OneFrame api) when got MeaninglessRequest error from the service" in {
@@ -74,7 +74,9 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
       maybeResult.isDefined shouldBe true
       val Some(result) = maybeResult
       result.status shouldBe Status.BadRequest
-      result.as[List[ParseCurrencyError]].unsafeRunSync() shouldBe List(ParseCurrencyError("from", "unknown currency"))
+      result.as[List[ParseCurrencyError]].unsafeRunSync() shouldBe List(
+        ParseCurrencyError("from", "unknown currency")
+      )
     }
 
     "return error if user passes wrong `to` currency" in {

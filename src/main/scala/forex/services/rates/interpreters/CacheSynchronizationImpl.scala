@@ -18,7 +18,7 @@ import forex.http.rates.client.algebra.OneFrameHttpClient
 import forex.http.rates.client.errors
 import forex.services.rates.Utils.GetCurrenciesValueOps
 import forex.services.rates.interpreters.CacheSynchronizationImpl.allPairs
-import forex.services.rates.{ CacheSynchronizationAlgebra, OneFrameAlgebra }
+import forex.services.rates.CacheSynchronizationAlgebra
 import scalacache.caffeine.CaffeineCache
 import scalacache.redis.RedisCache
 import scalacache.serialization.circe._
@@ -28,10 +28,9 @@ import tofu.syntax.logging._
 
 import scala.concurrent.duration.{ DurationInt, FiniteDuration }
 
-private[interpreters] class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLogging[*[_],
-                                                                                                   OneFrameAlgebra[
-                                                                                                     F
-                                                                                                   ]]](
+final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLogging[*[_], CacheSynchronizationAlgebra[
+  F
+]]](
     cache: AbstractCache[Rate],
     oneFrameClient: OneFrameHttpClient[F],
     cacheTtl: FiniteDuration,
@@ -40,9 +39,7 @@ private[interpreters] class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mo
 
   private val updateCacheFun: F[Unit] =
     info"Starting update of the cache values" >>
-      oneFrameClient
-        .getCurrenciesRates(GetCurrenciesRequest(allPairs))
-        .flatMap(handleClientResult)
+      oneFrameClient.getCurrenciesRates(GetCurrenciesRequest(allPairs)).flatMap(handleClientResult)
 
   private val updateCacheLoop: F[Unit] = (Timer[F].sleep(refreshRate) >> updateCacheFun).foreverM[Unit]
 
@@ -89,7 +86,7 @@ object CacheSynchronizationImpl {
     for {
       impl <- Resource.eval(
                logs
-                 .service[OneFrameAlgebra[F]]
+                 .service[CacheSynchronizationAlgebra[F]]
                  .map(implicit logs => new CacheSynchronizationImpl(cache, cli, refreshRate, cacheTtl))
              )
       _ <- impl.start()
