@@ -8,6 +8,8 @@ import forex.domain.Currency
 import forex.programs.RatesProgram
 import forex.programs.rates.{ Protocol => RatesProgramProtocol }
 import forex.domain.Utils._
+import forex.http.rates.server.models.QueryParams
+import forex.http.rates.server.models.out.ParseCurrencyError
 import forex.programs.rates.errors.Error
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
@@ -16,9 +18,8 @@ import org.http4s.{ HttpRoutes, ParseFailure, Response }
 
 class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
 
-  import Converters._
-  import Protocol._
-  import QueryParams._
+  import forex.http.rates.server.models.Converters._
+  import forex.http.rates.server.models.QueryParams._
 
   private[http] val prefixPath = "/rates"
 

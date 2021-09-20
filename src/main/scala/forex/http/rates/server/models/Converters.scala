@@ -1,10 +1,9 @@
-package forex.http.rates.server
+package forex.http.rates.server.models
 
 import forex.domain.Rate
+import forex.http.rates.server.models.out.GetApiResponse
 
 object Converters {
-  import Protocol._
-
   private[rates] implicit class GetApiResponseOps(val rate: Rate) extends AnyVal {
     def asGetApiResponse: GetApiResponse =
       GetApiResponse(
@@ -14,5 +13,4 @@ object Converters {
         timestamp = rate.timestamp
       )
   }
-
 }

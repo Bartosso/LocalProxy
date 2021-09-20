@@ -1,4 +1,4 @@
-package forex.http.rates.server
+package forex.http.rates.server.models
 
 import forex.domain.Currency
 import org.http4s.dsl.impl.ValidatingQueryParamDecoderMatcher
