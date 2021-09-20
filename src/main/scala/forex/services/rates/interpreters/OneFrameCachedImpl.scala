@@ -8,9 +8,9 @@ import cats.syntax.functor._
 import cats.syntax.traverse._
 import cats.effect.Resource
 import forex.domain.{ CacheKey, Rate }
-import forex.services.rates.errors.Error.{ FromAndToAreTheSame, NoValueForKey }
-import forex.services.rates.{ errors, OneFrameAlgebra }
-import forex.services.rates.errors.Error
+import forex.services.rates.OneFrameAlgebra
+import forex.services.rates.models.LookupError
+import forex.services.rates.models.LookupError.{ FromAndToAreTheSame, NoValueForKey }
 import scalacache.{ AbstractCache, Mode }
 import tofu.logging.{ Logs, ServiceLogging }
 import tofu.syntax.logging._
@@ -19,18 +19,18 @@ final class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], OneF
     cache: AbstractCache[Rate]
 ) extends OneFrameAlgebra[F] {
 
-  private def getKayAndCutMeaningless(pair: Rate.Pair): Either[Error, CacheKey] =
+  private def getKayAndCutMeaningless(pair: Rate.Pair): Either[LookupError, CacheKey] =
     if (pair.from == pair.to) FromAndToAreTheSame.asLeft[CacheKey]
-    else pair.toCacheKey.asRight[Error]
+    else pair.toCacheKey.asRight[LookupError]
 
-  private def getByKey(cacheKey: CacheKey): F[Either[Error, Rate]] =
+  private def getByKey(cacheKey: CacheKey): F[Either[LookupError, Rate]] =
     debug"getting $cacheKey from the cache" >> cache
       .get(cacheKey)
       .recoverWith { err =>
         // Somehow if caffeine is used and there is no value - I got error
         errorCause"Cache is empty" (err).as(None)
       }
-      .map[Either[errors.Error, Rate]](_.toRight(NoValueForKey(cacheKey)))
+      .map[Either[LookupError, Rate]](_.toRight(NoValueForKey(cacheKey)))
       .flatTap(
         _.fold(
           err => error"can't get $cacheKey from the cache, error - $err",
@@ -38,7 +38,7 @@ final class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], OneF
         )
       )
 
-  override def get(pair: Rate.Pair): F[Either[errors.Error, Rate]] = {
+  override def get(pair: Rate.Pair): F[Either[LookupError, Rate]] = {
     val maybeKey = getKayAndCutMeaningless(pair)
     maybeKey.flatTraverse(getByKey)
   }

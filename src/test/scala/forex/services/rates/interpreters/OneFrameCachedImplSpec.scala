@@ -5,8 +5,8 @@ import cats.syntax.either._
 import forex.Generators
 import forex.domain.Rate.Pair
 import forex.domain.{ Currency, Rate }
-import forex.services.rates.errors.Error.{ FromAndToAreTheSame, NoValueForKey }
 import forex.services.rates.interpreters.OneFrameCachedImpl
+import forex.services.rates.models.LookupError.{ FromAndToAreTheSame, NoValueForKey }
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import scalacache.CatsEffect.modes.async

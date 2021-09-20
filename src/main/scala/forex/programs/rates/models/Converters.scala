@@ -1,11 +1,12 @@
 package forex.programs.rates.models
 
 import forex.programs.rates.models.RatesRequestError.{ MeaninglessRequest, RateLookupUnreachable }
-import forex.services.rates.errors.{ Error => RatesServiceError }
+import forex.services.rates.models.LookupError
+import forex.services.rates.models.LookupError.{ FromAndToAreTheSame, NoValueForKey }
 
 case object Converters {
-  def toProgramError(error: RatesServiceError): RatesRequestError = error match {
-    case RatesServiceError.NoValueForKey(_)    => RateLookupUnreachable
-    case RatesServiceError.FromAndToAreTheSame => MeaninglessRequest
+  def toProgramError(error: LookupError): RatesRequestError = error match {
+    case NoValueForKey(_)    => RateLookupUnreachable
+    case FromAndToAreTheSame => MeaninglessRequest
   }
 }
