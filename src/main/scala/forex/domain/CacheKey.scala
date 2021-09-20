@@ -5,7 +5,7 @@ import forex.domain.Rate.Pair
 import tofu.logging.derivation.loggable
 
 @derive(loggable)
-case class CacheKey(private val in: String) extends AnyVal
+case class CacheKey(value: String) extends AnyVal
 
 object CacheKey {
   def apply(in: Pair): CacheKey = CacheKey(in.from.entryName + in.to.entryName)

@@ -21,7 +21,7 @@ class OneFrameCachedImplSpec extends AnyWordSpec with Matchers {
     "work fine when cache have the value" in {
       val testCache     = CaffeineCache[Rate]
       val insertedValue = Generators.rate()
-      testCache.put(insertedValue.pair.toCacheKey)(insertedValue)
+      testCache.put(insertedValue.pair.toCacheKey.value)(insertedValue)
 
       val mustBeRight = OneFrameCachedImpl[IO](testCache, testLogs)
         .use(algebra => algebra.get(insertedValue.pair))

@@ -25,7 +25,7 @@ final class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], OneF
 
   private def getByKey(cacheKey: CacheKey): F[Either[LookupError, Rate]] =
     debug"getting $cacheKey from the cache" >> cache
-      .get(cacheKey)
+      .get(cacheKey.value)
       .recoverWith { err =>
         // Somehow if caffeine is used and there is no value - I got error
         errorCause"Cache is empty" (err).as(None)

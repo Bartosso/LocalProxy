@@ -50,7 +50,8 @@ final class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Cli
       .map {
         case GetCurrenciesSuccessfulResponse(in) =>
           NonEmptyList.fromList(in).toRight[OneFrameHttpClientError](EmptyResponse)
-        case ErrorJsonResponse(error) => ErrorResponse(error).asLeft
+        case ErrorJsonResponse("Forbidden") => EndpointForbidden.asLeft
+        case ErrorJsonResponse(error)       => ErrorResponse(error).asLeft
       }
       .foldF(_ => handleUnknownResponse(resp), _.pure[F])
 

@@ -13,7 +13,7 @@ import forex.config.ClientConfig
 import forex.domain.{ Currency, Price, Rate, Timestamp }
 import forex.domain.Rate.Pair
 import forex.http.rates.client.impl.OneFrameHttpClientImpl
-import forex.http.rates.client.models.OneFrameHttpClientError.{ EmptyResponse, ErrorResponse }
+import forex.http.rates.client.models.OneFrameHttpClientError._
 import forex.http.rates.client.models.in.GetCurrencyValue
 import forex.http.rates.client.models.out.GetCurrencyValuePair
 import forex.http.rates.client.models.{ GetCurrenciesRequest, OneFrameHttpClientError }
@@ -50,9 +50,9 @@ class OneFrameHttpClientImplSpec extends AnyWordSpec with Matchers with BeforeAn
 
   "OneFrameHttpClientImpl" should {
     "handle empty response (when `from` and `to` have the same value)" in {
-      val uri           = "/rates?pair=USDUSD"
-      val emptyResponse = "[]"
-      stubWithBody(emptyResponse, uri, 200)
+      val uri               = "/rates?pair=USDUSD"
+      val emptyResponseBody = "[]"
+      stubWithBody(emptyResponseBody, uri, 200)
       val requestPair = GetCurrencyValuePair(Currency.USD, Currency.USD)
 
       val response = requestForValues(GetCurrenciesRequest(NonEmptyList.one(requestPair))).unsafeRunSync()
@@ -60,8 +60,8 @@ class OneFrameHttpClientImplSpec extends AnyWordSpec with Matchers with BeforeAn
     }
 
     "handle response with a single value" in {
-      val uri          = "/rates?pair=JPYUSD"
-      val responseStub = """[
+      val uri              = "/rates?pair=JPYUSD"
+      val responseBodyStub = """[
                        |    {
                        |        "from": "JPY",
                        |        "to": "USD",
@@ -71,7 +71,7 @@ class OneFrameHttpClientImplSpec extends AnyWordSpec with Matchers with BeforeAn
                        |        "time_stamp": "2021-09-20T09:30:10.343Z"
                        |    }
                        |]""".stripMargin
-      stubWithBody(responseStub, uri, 200)
+      stubWithBody(responseBodyStub, uri, 200)
       val requestPair = GetCurrencyValuePair(Currency.JPY, Currency.USD)
       val expectedValue = GetCurrencyValue(
         Currency.JPY,
@@ -87,8 +87,8 @@ class OneFrameHttpClientImplSpec extends AnyWordSpec with Matchers with BeforeAn
     }
 
     "handle response with severial values" in {
-      val uri          = "/rates?pair=JPYUSD&pair=JPYCAD"
-      val responseStub = """[
+      val uri              = "/rates?pair=JPYUSD&pair=JPYCAD"
+      val responseBodyStub = """[
                           |    {
                           |        "from": "JPY",
                           |        "to": "USD",
@@ -106,7 +106,7 @@ class OneFrameHttpClientImplSpec extends AnyWordSpec with Matchers with BeforeAn
                           |        "time_stamp": "2021-09-20T10:12:34.59Z"
                           |    }
                           |]""".stripMargin
-      stubWithBody(responseStub, uri, 200)
+      stubWithBody(responseBodyStub, uri, 200)
       val requestPair1 = GetCurrencyValuePair(Currency.JPY, Currency.USD)
       val requestPair2 = GetCurrencyValuePair(Currency.JPY, Currency.CAD)
       val expectedValue1 = GetCurrencyValue(
@@ -132,17 +132,52 @@ class OneFrameHttpClientImplSpec extends AnyWordSpec with Matchers with BeforeAn
 
     //It's impossible
     "deal with response 200 but with error in body" in {
-      val uri          = "/rates?pair=JPYUSD"
-      val responseStub = """{
+      val uri              = "/rates?pair=JPYUSD"
+      val responseBodyStub = """{
                            |    "error": "Invalid Currency Pair"
                            |}""".stripMargin
-      stubWithBody(responseStub, uri, 200)
+      stubWithBody(responseBodyStub, uri, 200)
       val requestPair = GetCurrencyValuePair(Currency.JPY, Currency.USD)
 
       val response = requestForValues(GetCurrenciesRequest(NonEmptyList.one(requestPair))).unsafeRunSync()
       response shouldBe ErrorResponse("Invalid Currency Pair").asLeft
     }
 
+    "deal with forbidden error with status 200" in {
+      val uri              = "/rates?pair=JPYUSD"
+      val responseBodyStub = """{
+                           |    "error": "Forbidden"
+                           |}""".stripMargin
+      stubWithBody(responseBodyStub, uri, 200)
+      val requestPair = GetCurrencyValuePair(Currency.JPY, Currency.USD)
+
+      val response = requestForValues(GetCurrenciesRequest(NonEmptyList.one(requestPair))).unsafeRunSync()
+      response shouldBe EndpointForbidden.asLeft
+    }
+
+    "deal with not found error if somehow endpoint disappeared" in {
+      val uri              = "/rates?pair=JPYUSD"
+      val responseBodyStub = ""
+      stubWithBody(responseBodyStub, uri, 404)
+      val requestPair = GetCurrencyValuePair(Currency.JPY, Currency.USD)
+
+      val response = requestForValues(GetCurrenciesRequest(NonEmptyList.one(requestPair))).unsafeRunSync()
+      response shouldBe NotFound.asLeft
+    }
+
+    "deal with unknown response (500)" in {
+      val uri              = "/rates?pair=JPYUSD"
+      val responseBodyStub = """{
+                               |    "message": "oh no, server died"
+                               |}""".stripMargin
+      stubWithBody(responseBodyStub, uri, 500)
+      val requestPair = GetCurrencyValuePair(Currency.JPY, Currency.USD)
+
+      val response = requestForValues(GetCurrenciesRequest(NonEmptyList.one(requestPair))).unsafeRunSync()
+      response shouldBe UnknownResponse("""{
+                                          |    "message": "oh no, server died"
+                                          |}""".stripMargin).asLeft
+    }
   }
 
   def stubWithBody(body: String, uri: String, status: Int): StubMapping =

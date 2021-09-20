@@ -46,7 +46,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLoggi
 
   private val synchronizationInit =
     info"starting cache synchronization" >> cache
-      .get(allPairs.head.toCacheKey)
+      .get(allPairs.head.toCacheKey.value)
       .recoverWith { err =>
         // Somehow if caffeine is used and there is no value - I got error
         errorCause"Cache is empty" (err).as(None)
@@ -60,7 +60,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLoggi
 
   private def updateCacheWithValues(values: NonEmptyList[GetCurrencyValue]): F[Unit] =
     values.toList.traverse { value =>
-      cache.put(value.toCacheKey)(value.toRate, Some(cacheTtl))
+      cache.put(value.toCacheKey.value)(value.toRate, Some(cacheTtl))
     } >> info"Cache update successfully done"
 
   private def logClientError: PartialFunction[OneFrameHttpClientError, F[Unit]] = {
