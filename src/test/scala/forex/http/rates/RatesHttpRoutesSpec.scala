@@ -9,13 +9,10 @@ import forex.programs.RatesProgram
 import forex.domain.Utils.jsonDecoder
 import forex.domain.Utils._
 import forex.http.rates.server.models.Converters.GetApiResponseOps
-import forex.http.rates.server.models.JsonConfig._
 import forex.http.rates.server.models.out.{ GetApiResponse, ParseCurrencyError }
 import forex.programs.rates.models.RatesRequestError
 import forex.programs.rates.models.RatesRequestError.{ MeaninglessRequest, RateLookupUnreachable }
-import io.circe.Decoder
-import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
-import org.http4s.FormDataDecoder.formEntityDecoder
+import forex.TestCodecs._
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.{ Request, Status, Uri }
@@ -23,9 +20,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
-
-  implicit val unknownCurrencyDecoder: Decoder[ParseCurrencyError] = deriveConfiguredDecoder[ParseCurrencyError]
-  implicit val responseDecoder: Decoder[GetApiResponse]            = deriveConfiguredDecoder[GetApiResponse]
 
   val dummyUri: Uri   = uri"/rates?from=JPY&to=USD"
   val dummyRate: Rate = Generators.rate()

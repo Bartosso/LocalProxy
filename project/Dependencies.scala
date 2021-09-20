@@ -18,6 +18,7 @@ object Dependencies {
     val scalaTest      = "3.2.9"
     val catsScalaCheck = "0.3.0"
     val wiremock       = "2.27.2"
+    val testContainers = "0.39.7"
   }
 
   object Libraries {
@@ -54,10 +55,11 @@ object Dependencies {
     lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
 
     // Test
-    lazy val scalaTest      = "org.scalatest"          %% "scalatest"       % Versions.scalaTest
-    lazy val scalaCheck     = "org.scalacheck"         %% "scalacheck"      % Versions.scalaCheck
-    lazy val catsScalaCheck = "io.chrisdavenport"      %% "cats-scalacheck" % Versions.catsScalaCheck
-    lazy val wiremock       = "com.github.tomakehurst" % "wiremock"         % Versions.wiremock
+    lazy val scalaTest      = "org.scalatest"          %% "scalatest"                      % Versions.scalaTest
+    lazy val scalaCheck     = "org.scalacheck"         %% "scalacheck"                     % Versions.scalaCheck
+    lazy val catsScalaCheck = "io.chrisdavenport"      %% "cats-scalacheck"                % Versions.catsScalaCheck
+    lazy val wiremock       = "com.github.tomakehurst" % "wiremock"                        % Versions.wiremock
+    lazy val testContainers = "com.dimafeng"           %% "testcontainers-scala-scalatest" % Versions.testContainers
   }
 
 }

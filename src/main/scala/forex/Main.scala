@@ -15,18 +15,20 @@ object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
     implicit val mode: Mode[IO] = scalacache.CatsEffect.modes.async
-    new Application[IO].resource(executionContext).use(_ => IO.never)
+    val config                  = Blocker[IO].use(blocker => Config.load[IO]("app", blocker))
+    Resource
+      .eval(config)
+      .flatMap(conf => new Application[IO].resource(executionContext, conf))
+      .use(_ => IO.never)
   }
 
 }
 
-class Application[F[_]: ConcurrentEffect: Timer: Mode: ContextShift] {
+class Application[F[_]: ConcurrentEffect: Timer: Mode] {
 
-  def resource(ec: ExecutionContext): Resource[F, Unit] =
+  def resource(ec: ExecutionContext, config: ApplicationConfig): Resource[F, Unit] = {
+    val clientConfig = config.clientConfig
     for {
-      blocker <- Blocker[F]
-      config <- Config.resource("app", blocker)
-      clientConfig = config.clientConfig
       httpCli <- BlazeClientBuilder(ec)
                   .withRequestTimeout(clientConfig.timeout)
                   .withIdleTimeout(clientConfig.idleTimeout)
@@ -41,5 +43,6 @@ class Application[F[_]: ConcurrentEffect: Timer: Mode: ContextShift] {
             .withHttpApp(module.httpApp)
             .resource
     } yield ()
+  }
 
 }
