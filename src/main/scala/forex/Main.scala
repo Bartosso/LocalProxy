@@ -6,7 +6,7 @@ import forex.config._
 import forex.http.rates.client.impl.OneFrameHttpClientImpl
 import forex.services.rates.Interpreters
 import forex.services.rates.interpreters.CacheSynchronizationImpl
-import org.http4s.client.blaze.BlazeClientBuilder
+import org.http4s.client.blaze.{ BlazeClientBuilder, BlazeClientConfig }
 import org.http4s.server.blaze.BlazeServerBuilder
 import scalacache.Mode
 import tofu.logging.Logs
@@ -26,7 +26,11 @@ class Application[F[_]: ConcurrentEffect: Timer: Mode: ContextShift] {
     for {
       blocker <- Blocker[F]
       config <- Config.resource("app", blocker)
-      httpCli <- BlazeClientBuilder(ec).resource
+      clientConfig = config.clientConfig
+      httpCli <- BlazeClientBuilder(ec)
+                  .withRequestTimeout(clientConfig.timeOut)
+                  .withIdleTimeout(clientConfig.idleTimeout)
+                  .resource
       logs        = Logs.sync[F, F]
       oneFrameCli = OneFrameHttpClientImpl(config.clientConfig, httpCli)
       cache <- CacheSynchronizationImpl.createSyncedCache(oneFrameCli, config.oneFrameConfig, logs)

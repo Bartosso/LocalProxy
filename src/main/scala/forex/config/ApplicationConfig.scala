@@ -24,4 +24,8 @@ case class CacheConfig(
     ttl: FiniteDuration
 )
 
-case class ClientConfig(token: String, targetHost: String, targetPort: Int)
+case class ClientConfig(token: String,
+                        targetHost: String,
+                        targetPort: Int,
+                        timeOut: FiniteDuration,
+                        idleTimeout: FiniteDuration)
