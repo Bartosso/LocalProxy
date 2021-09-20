@@ -2,10 +2,11 @@ package forex.services.rates.interpreters
 
 import cats.data.NonEmptyList
 import cats.effect.{ ContextShift, IO, Timer }
+import cats.syntax.applicative._
 import cats.syntax.either._
 import forex.Generators
 import forex.Util.getCurrencyValueToRate
-import forex.domain.{ Currency, Rate, Timestamp }
+import forex.domain.{ Currency, Price, Rate, Timestamp }
 import forex.http.rates.client.Protocol.In.GetCurrencyValue
 import forex.http.rates.client.Protocol.Out
 import forex.http.rates.client.algebra.OneFrameHttpClient
@@ -37,7 +38,7 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
     "sync cache on the start if the cache is empty" in {
       val testCache      = CaffeineCache[Rate]
       val someCurrency   = Generators.getCurrencyValue()
-      val dummyClient    = createDummyClient(NonEmptyList.one(someCurrency).asRight)
+      val dummyClient    = createDummyClientWithFun(NonEmptyList.one(someCurrency).asRight)
       val dummyCacheSync = new CacheSynchronizationImpl[IO](testCache, dummyClient, cacheTtl, refreshRate)
       val key            = someCurrency.from.entryName + someCurrency.to.entryName
       val expectedValue  = getCurrencyValueToRate(someCurrency)
@@ -60,7 +61,7 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
       val veryFreshCurrency =
         Generators.getCurrencyValue(1L).copy(timeStamp = Timestamp.now, from = headPair._1, to = headPair._2)
 
-      val dummyClient    = createDummyClient(NonEmptyList.one(veryFreshCurrency).asRight)
+      val dummyClient    = createDummyClientWithFun(NonEmptyList.one(veryFreshCurrency).asRight)
       val dummyCacheSync = new CacheSynchronizationImpl[IO](testCache, dummyClient, cacheTtl, refreshRate)
 
       val key           = freshCurrency.from.entryName + freshCurrency.to.entryName
@@ -86,7 +87,7 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
       val veryFreshCurrency =
         Generators.getCurrencyValue(1L).copy(timeStamp = Timestamp.now, from = headPair._1, to = headPair._2)
 
-      val dummyClient    = createDummyClient(NonEmptyList.one(veryFreshCurrency).asRight)
+      val dummyClient    = createDummyClientWithFun(NonEmptyList.one(veryFreshCurrency).asRight)
       val dummyCacheSync = new CacheSynchronizationImpl[IO](testCache, dummyClient, cacheTtl, refreshRate)
 
       val key                    = exceedThresholdCurrencyValue.from.entryName + exceedThresholdCurrencyValue.to.entryName
@@ -102,11 +103,40 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
       succeed
     }
 
+    "replace old value with the new one after some time" in {
+      val testCache               = CaffeineCache[Rate]
+      val currencyValueAtTheStart = Generators.getCurrencyValue()
+      val currencyUpdated         = currencyValueAtTheStart.copy(timeStamp = Timestamp.now, price = Price(90L))
+      val funRefreshRate          = 3.milliseconds
+
+      val dummyClient: OneFrameHttpClient[IO] = new OneFrameHttpClient[IO] {
+        var evidence = false
+        override def getCurrenciesRates(
+            in: Out.GetCurrenciesRequest
+        ): IO[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] =
+          if (!evidence) {
+            evidence = true
+            NonEmptyList.one(currencyValueAtTheStart).asRight[OneFrameHttpClientError].pure[IO]
+          } else { NonEmptyList.one(currencyUpdated).asRight[OneFrameHttpClientError].pure[IO] }
+      }
+      val dummyCacheSync = new CacheSynchronizationImpl[IO](testCache, dummyClient, cacheTtl, funRefreshRate)
+      val key            = currencyValueAtTheStart.from.entryName + currencyValueAtTheStart.to.entryName
+      val expectedValue  = getCurrencyValueToRate(currencyUpdated)
+
+      testCache.get(key).isEmpty shouldBe true
+
+      val release = dummyCacheSync.start().allocated.unsafeRunSync()._2
+
+      Timer[IO].sleep(funRefreshRate * 10).unsafeRunSync()
+
+      testCache.get(key) shouldBe Some(expectedValue)
+      release.unsafeRunSync()
+      succeed
+    }
   }
 
-  def createDummyClient(
-      response: Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]
-  ): OneFrameHttpClient[IO] =
-    (_: Out.GetCurrenciesRequest) => IO.pure(response)
+  def createDummyClientWithFun(
+      fun: => Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]
+  ): OneFrameHttpClient[IO] = (_: Out.GetCurrenciesRequest) => IO(fun)
 
 }

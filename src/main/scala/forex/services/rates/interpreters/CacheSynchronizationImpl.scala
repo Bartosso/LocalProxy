@@ -102,7 +102,7 @@ object CacheSynchronizationImpl {
   private val allPairs = NonEmptyList.fromListUnsafe(maybeAllPairs.toList)
 
   private def calculateRefreshRate(cacheTtl: FiniteDuration): FiniteDuration =
-    if (cacheTtl <= 9.seconds) 1.second
+    if (cacheTtl <= 3.microseconds) 1.millisecond
     // If we take the default limit is 1000 requests per day - we can perform a request every 86.4 seconds
     // so 100 seconds should be enough
     else cacheTtl / 3
