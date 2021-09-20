@@ -34,8 +34,8 @@ class IntegrationSpec extends AnyWordSpec with Matchers with ForAllTestContainer
       val (_, releaseApp)         = new Application[IO].resource(ExecutionContext.global, config).allocated.unsafeRunSync()
       val (client, releaseClient) = BlazeClientBuilder[IO](global).resource.allocated.unsafeRunSync()
       val requestResult           = client.get(testUri)(response => response.as[GetApiResponse])
-      val ehe                     = Try(requestResult.unsafeRunSync())
-      ehe.isSuccess shouldBe true
+      val maybeGetApiResponse     = Try(requestResult.unsafeRunSync())
+      maybeGetApiResponse.isSuccess shouldBe true
       releaseApp.unsafeRunSync()
       releaseClient.unsafeRunSync()
       succeed
