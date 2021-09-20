@@ -14,7 +14,9 @@ object Rate {
   final case class Pair(
       from: Currency,
       to: Currency
-  )
+  ) {
+    def toCacheKey: CacheKey = CacheKey(this)
+  }
 
   implicit val rateEncoder: Encoder[Rate] = deriveEncoder[Rate]
   implicit val rateDecoder: Decoder[Rate] = deriveDecoder[Rate]

@@ -5,7 +5,6 @@ import cats.syntax.either._
 import forex.Generators
 import forex.domain.Rate.Pair
 import forex.domain.{ Currency, Rate }
-import forex.services.rates.Utils.PairOps
 import forex.services.rates.errors.Error.{ FromAndToAreTheSame, NoValueForKey }
 import forex.services.rates.interpreters.OneFrameCachedImpl
 import org.scalatest.matchers.should.Matchers
@@ -22,7 +21,7 @@ class OneFrameCachedImplSpec extends AnyWordSpec with Matchers {
     "work fine when cache have the value" in {
       val testCache     = CaffeineCache[Rate]
       val insertedValue = Generators.rate()
-      testCache.put(insertedValue.pair.toKeyString)(insertedValue)
+      testCache.put(insertedValue.pair.toCacheKey)(insertedValue)
 
       val mustBeRight = OneFrameCachedImpl[IO](testCache, testLogs)
         .use(algebra => algebra.get(insertedValue.pair))
@@ -37,7 +36,7 @@ class OneFrameCachedImplSpec extends AnyWordSpec with Matchers {
       val mustBeLeft = OneFrameCachedImpl[IO](testCache, testLogs)
         .use(algebra => algebra.get(someValue.pair))
         .unsafeRunSync()
-      mustBeLeft shouldBe NoValueForKey(someValue.pair.toKeyString).asLeft
+      mustBeLeft shouldBe NoValueForKey(someValue.pair.toCacheKey).asLeft
     }
 
     "return an error if the field `from` and `to` in the pair is the same" in {

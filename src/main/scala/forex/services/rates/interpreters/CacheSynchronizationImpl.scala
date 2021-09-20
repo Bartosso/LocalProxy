@@ -16,7 +16,6 @@ import forex.http.rates.client.Protocol.In
 import forex.http.rates.client.Protocol.Out.{ GetCurrenciesRequest, GetCurrencyValuePair }
 import forex.http.rates.client.algebra.OneFrameHttpClient
 import forex.http.rates.client.errors
-import forex.services.rates.Utils.GetCurrenciesValueOps
 import forex.services.rates.interpreters.CacheSynchronizationImpl.allPairs
 import forex.services.rates.CacheSynchronizationAlgebra
 import scalacache.caffeine.CaffeineCache
@@ -45,7 +44,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLoggi
 
   private val synchronizationInit =
     info"starting cache synchronization" >> cache
-      .get(allPairs.head.toKeyString)
+      .get(allPairs.head.toCacheKey)
       .recoverWith { err =>
         // Somehow if caffeine is used and there is no value - I got error
         errorCause"Cache is empty" (err).as(None)
@@ -59,7 +58,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLoggi
 
   private def updateCacheWithValues(values: NonEmptyList[In.GetCurrencyValue]): F[Unit] =
     values.toList.traverse { value =>
-      cache.put(value.toKeyString)(value.toRate, Some(cacheTtl))
+      cache.put(value.toCacheKey)(value.toRate, Some(cacheTtl))
     } >> info"Cache update successfully done"
 
   private def logClientError: PartialFunction[errors.OneFrameHttpClientError, F[Unit]] = {

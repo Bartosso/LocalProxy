@@ -2,7 +2,8 @@ package forex.http.rates.client
 
 import cats.data.NonEmptyList
 import cats.syntax.functor._
-import forex.domain.{ Currency, Price, Timestamp }
+import forex.domain.Rate.Pair
+import forex.domain.{ CacheKey, Currency, Price, Rate, Timestamp }
 import forex.domain.Utils._
 import io.circe.Decoder
 import io.circe.generic.extras.Configuration
@@ -15,7 +16,7 @@ object Protocol {
 
   object Out {
     final case class GetCurrencyValuePair(from: Currency, to: Currency) {
-      def toKeyString: String = s"${from.entryName}${to.entryName}"
+      def toCacheKey: CacheKey = CacheKey(from, to)
     }
     final case class GetCurrenciesRequest(currencies: NonEmptyList[GetCurrencyValuePair])
 
@@ -32,7 +33,13 @@ object Protocol {
                                       bid: BigDecimal,
                                       ask: BigDecimal,
                                       price: Price,
-                                      timeStamp: Timestamp)
+                                      timeStamp: Timestamp) {
+      def toCacheKey: CacheKey = CacheKey(from, to)
+      def toRate: Rate = {
+        val pair = Pair(from, to)
+        Rate(pair, price, timeStamp)
+      }
+    }
 
     final case class GetCurrenciesSuccessfulResponse(in: List[GetCurrencyValue]) extends OneFrameResponse
 
