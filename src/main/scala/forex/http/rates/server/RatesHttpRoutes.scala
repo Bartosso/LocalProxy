@@ -6,11 +6,10 @@ import cats.syntax.apply._
 import cats.syntax.flatMap._
 import forex.domain.Currency
 import forex.programs.RatesProgram
-import forex.programs.rates.{ Protocol => RatesProgramProtocol }
 import forex.domain.Utils._
 import forex.http.rates.server.models.QueryParams
 import forex.http.rates.server.models.out.ParseCurrencyError
-import forex.programs.rates.errors.Error
+import forex.programs.rates.models.{ GetRatesRequest, RatesRequestError }
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
@@ -31,19 +30,19 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
       )
   }
 
-  private def handleServiceErrors: PartialFunction[Error, F[Response[F]]] = {
-    case Error.RateLookupUnreachable => BadGateway()
+  private def handleServiceErrors: PartialFunction[RatesRequestError, F[Response[F]]] = {
+    case RatesRequestError.RateLookupUnreachable => BadGateway()
     // Like in our target One Frame Api we return empty list in that case
-    case Error.MeaninglessRequest => Ok(List[Unit]())
+    case RatesRequestError.MeaninglessRequest => Ok(List[Unit]())
   }
 
   private def parseGetRatesRequest(
       maybeFrom: ValidatedNel[ParseFailure, Currency],
       maybeTo: ValidatedNel[ParseFailure, Currency]
-  ): ValidatedNel[ParseCurrencyError, RatesProgramProtocol.GetRatesRequest] = {
+  ): ValidatedNel[ParseCurrencyError, GetRatesRequest] = {
     val from = handleCurrencyParseFailure(QueryParams.Names.FROM, maybeFrom)
     val to   = handleCurrencyParseFailure(QueryParams.Names.TO, maybeTo)
-    (from, to).mapN(RatesProgramProtocol.GetRatesRequest)
+    (from, to).mapN(GetRatesRequest)
   }
 
   private def handleCurrencyParseFailure(

@@ -17,6 +17,7 @@ import forex.http.rates.client.models.out._
 import forex.http.rates.client.models._
 import forex.http.rates.client.algebra.OneFrameHttpClient
 import forex.http.rates.client.models
+import forex.http.rates.client.models.OneFrameHttpClientError.ClientError
 import forex.services.rates.interpreters.CacheSynchronizationImpl.allPairs
 import forex.services.rates.CacheSynchronizationAlgebra
 import scalacache.caffeine.CaffeineCache

@@ -6,13 +6,13 @@ import forex.Generators
 import forex.domain.Rate
 import forex.http.rates.server.RatesHttpRoutes
 import forex.programs.RatesProgram
-import forex.programs.rates.errors.Error.{ MeaninglessRequest, RateLookupUnreachable }
-import forex.programs.rates.errors
 import forex.domain.Utils.jsonDecoder
 import forex.domain.Utils._
 import forex.http.rates.server.models.Converters.GetApiResponseOps
 import forex.http.rates.server.models.JsonConfig._
 import forex.http.rates.server.models.out.{ GetApiResponse, ParseCurrencyError }
+import forex.programs.rates.models.RatesRequestError
+import forex.programs.rates.models.RatesRequestError.{ MeaninglessRequest, RateLookupUnreachable }
 import io.circe.Decoder
 import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
 import org.http4s.FormDataDecoder.formEntityDecoder
@@ -101,6 +101,6 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
     }
   }
 
-  def dummyProgramWithGetResult(result: Either[errors.Error, Rate]): RatesProgram[IO] = _ => IO.pure(result)
+  def dummyProgramWithGetResult(result: Either[RatesRequestError, Rate]): RatesProgram[IO] = _ => IO.pure(result)
 
 }

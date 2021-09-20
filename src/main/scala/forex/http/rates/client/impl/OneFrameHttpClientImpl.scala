@@ -10,7 +10,9 @@ import forex.config.ClientConfig
 import forex.domain.Utils._
 import forex.http.rates.client.models.in._
 import forex.http.rates.client.algebra.OneFrameHttpClient
+import forex.http.rates.client.models.OneFrameHttpClientError._
 import forex.http.rates.client.models._
+import forex.http.rates.client.models.in.OneFrameResponse.{ ErrorJsonResponse, GetCurrenciesSuccessfulResponse }
 import fs2.text
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.{ Header, Headers, Method, Request, Response, Status, Uri }

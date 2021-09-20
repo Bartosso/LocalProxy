@@ -8,11 +8,11 @@ import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
 
 sealed trait OneFrameResponse
 
-final case class GetCurrenciesSuccessfulResponse(in: List[GetCurrencyValue]) extends OneFrameResponse
-
-final case class ErrorJsonResponse(error: String) extends OneFrameResponse
-
 object OneFrameResponse {
+  final case class GetCurrenciesSuccessfulResponse(in: List[GetCurrencyValue]) extends OneFrameResponse
+
+  final case class ErrorJsonResponse(error: String) extends OneFrameResponse
+
   implicit val errorResponseDecoder: Decoder[ErrorJsonResponse] =
     deriveConfiguredDecoder[ErrorJsonResponse]
 
