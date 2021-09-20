@@ -12,10 +12,11 @@ import cats.implicits.catsSyntaxApplicativeId
 import com.github.benmanes.caffeine.cache.Caffeine
 import forex.config.{ CacheConfig, OneFrameConfig }
 import forex.domain.{ Currency, Rate, Timestamp }
-import forex.http.rates.client.Protocol.In
-import forex.http.rates.client.Protocol.Out.{ GetCurrenciesRequest, GetCurrencyValuePair }
+import forex.http.rates.client.models.in._
+import forex.http.rates.client.models.out._
+import forex.http.rates.client.models._
 import forex.http.rates.client.algebra.OneFrameHttpClient
-import forex.http.rates.client.errors
+import forex.http.rates.client.models
 import forex.services.rates.interpreters.CacheSynchronizationImpl.allPairs
 import forex.services.rates.CacheSynchronizationAlgebra
 import scalacache.caffeine.CaffeineCache
@@ -38,7 +39,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLoggi
 
   private val updateCacheFun: F[Unit] =
     info"Starting update of the cache values" >>
-      oneFrameClient.getCurrenciesRates(GetCurrenciesRequest(allPairs)).flatMap(handleClientResult)
+      oneFrameClient.getCurrenciesRates(models.GetCurrenciesRequest(allPairs)).flatMap(handleClientResult)
 
   private val updateCacheLoop: F[Unit] = (Timer[F].sleep(refreshRate) >> updateCacheFun).foreverM[Unit]
 
@@ -52,18 +53,18 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: Mode: ServiceLoggi
       .flatMap(_.fold(updateCacheFun)(updateCacheIfItsOld))
 
   private def handleClientResult(
-      in: Either[errors.OneFrameHttpClientError, NonEmptyList[In.GetCurrencyValue]]
+      in: Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]
   ): F[Unit] =
     in.fold(logClientError, updateCacheWithValues)
 
-  private def updateCacheWithValues(values: NonEmptyList[In.GetCurrencyValue]): F[Unit] =
+  private def updateCacheWithValues(values: NonEmptyList[GetCurrencyValue]): F[Unit] =
     values.toList.traverse { value =>
       cache.put(value.toCacheKey)(value.toRate, Some(cacheTtl))
     } >> info"Cache update successfully done"
 
-  private def logClientError: PartialFunction[errors.OneFrameHttpClientError, F[Unit]] = {
-    case errors.ClientError(error) => errorCause"Can't update cache values, client error" (error)
-    case error                     => error"Can't update cache values, error - $error"
+  private def logClientError: PartialFunction[OneFrameHttpClientError, F[Unit]] = {
+    case ClientError(error) => errorCause"Can't update cache values, client error" (error)
+    case error              => error"Can't update cache values, error - $error"
   }
 
   private def updateCacheIfItsOld(actualRate: Rate): F[Unit] = {

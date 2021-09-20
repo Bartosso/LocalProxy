@@ -2,7 +2,7 @@ package forex
 
 import forex.domain.{ Currency, Price, Rate, Timestamp }
 import forex.domain.Rate.Pair
-import forex.http.rates.client.Protocol.In.GetCurrencyValue
+import forex.http.rates.client.models.in.GetCurrencyValue
 import org.scalacheck._
 
 import java.time.ZoneOffset

@@ -7,10 +7,9 @@ import cats.syntax.either._
 import forex.Generators
 import forex.Util.getCurrencyValueToRate
 import forex.domain.{ Currency, Price, Rate, Timestamp }
-import forex.http.rates.client.Protocol.In.GetCurrencyValue
-import forex.http.rates.client.Protocol.Out
+import forex.http.rates.client.models.in.GetCurrencyValue
+import forex.http.rates.client.models.{ GetCurrenciesRequest, OneFrameHttpClientError }
 import forex.http.rates.client.algebra.OneFrameHttpClient
-import forex.http.rates.client.errors.OneFrameHttpClientError
 import forex.services.rates.CacheSynchronizationAlgebra
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -112,7 +111,7 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
       val dummyClient: OneFrameHttpClient[IO] = new OneFrameHttpClient[IO] {
         var evidence = false
         override def getCurrenciesRates(
-            in: Out.GetCurrenciesRequest
+            in: GetCurrenciesRequest
         ): IO[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] =
           if (!evidence) {
             evidence = true
@@ -137,6 +136,6 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
 
   def createDummyClientWithFun(
       fun: => Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]
-  ): OneFrameHttpClient[IO] = (_: Out.GetCurrenciesRequest) => IO(fun)
+  ): OneFrameHttpClient[IO] = (_: GetCurrenciesRequest) => IO(fun)
 
 }

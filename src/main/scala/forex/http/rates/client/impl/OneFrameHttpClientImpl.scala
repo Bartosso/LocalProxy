@@ -7,16 +7,10 @@ import cats.syntax.applicativeError._
 import cats.syntax.either._
 import cats.syntax.functor._
 import forex.config.ClientConfig
-import forex.http.rates.client.errors._
 import forex.domain.Utils._
-import forex.http.rates.client.Protocol.In.{
-  ErrorJsonResponse,
-  GetCurrenciesSuccessfulResponse,
-  GetCurrencyValue,
-  OneFrameResponse
-}
-import forex.http.rates.client.Protocol.Out.GetCurrenciesRequest
+import forex.http.rates.client.models.in._
 import forex.http.rates.client.algebra.OneFrameHttpClient
+import forex.http.rates.client.models._
 import fs2.text
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.{ Header, Headers, Method, Request, Response, Status, Uri }

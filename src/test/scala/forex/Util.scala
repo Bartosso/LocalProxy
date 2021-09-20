@@ -2,7 +2,7 @@ package forex
 
 import forex.domain.Rate.Pair
 import forex.domain.Rate
-import forex.http.rates.client.Protocol.In.GetCurrencyValue
+import forex.http.rates.client.models.in.GetCurrencyValue
 
 object Util {
 
