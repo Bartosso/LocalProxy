@@ -68,8 +68,8 @@ docker / dockerfile := {
 
 docker / imageNames := Seq(
   ImageName(
-    namespace = Some("forex"),
-    repository = "bartosso-local-proxy"
+    namespace = Some("bartosso"),
+    repository = "local-proxy"
   )
 )
 
