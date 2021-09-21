@@ -1,6 +1,8 @@
 package forex.http.rates.server.models
 
 import forex.domain.Rate
+import forex.domain.Rate.Pair
+import forex.http.rates.client.models.out.GetCurrencyValuePair
 import forex.http.rates.server.models.out.GetApiResponse
 
 object Converters {
@@ -12,5 +14,8 @@ object Converters {
         price = rate.price,
         timestamp = rate.timestamp
       )
+  }
+  implicit class GetCurrencyValuePairOps(val pair: Pair) extends AnyVal {
+    def asGetCurrencyValuePair: GetCurrencyValuePair = GetCurrencyValuePair(pair.from, pair.to)
   }
 }

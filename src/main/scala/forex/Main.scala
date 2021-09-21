@@ -5,7 +5,7 @@ import cats.effect._
 import forex.config._
 import forex.http.rates.client.impl.OneFrameHttpClientImpl
 import forex.services.rates.Interpreters
-import forex.services.rates.interpreters.CacheSynchronizationImpl
+import forex.services.rates.interpreters.{ CacheImpl, CacheSynchronizationImpl }
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.server.blaze.BlazeServerBuilder
 import scalacache.Mode
@@ -35,7 +35,8 @@ class Application[F[_]: ConcurrentEffect: Timer: Mode] {
                   .resource
       logs        = Logs.sync[F, F]
       oneFrameCli = OneFrameHttpClientImpl(config.clientConfig, httpCli)
-      cache <- CacheSynchronizationImpl.createSyncedCache(oneFrameCli, config.oneFrameConfig, logs)
+      cache <- CacheImpl.resource(config.cacheConfig, logs)
+      _ <- CacheSynchronizationImpl.startCacheSynchronization(oneFrameCli, cache, config.cacheConfig, logs)
       oneFrameRestService <- Interpreters.cachedImpl(cache, logs)
       module = new Module[F](config, oneFrameRestService)
       _ <- BlazeServerBuilder[F](ec)

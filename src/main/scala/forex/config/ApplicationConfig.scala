@@ -5,17 +5,13 @@ import scala.concurrent.duration.FiniteDuration
 case class ApplicationConfig(
     http: HttpConfig,
     clientConfig: ClientConfig,
-    oneFrameConfig: OneFrameConfig
+    cacheConfig: CacheConfig
 )
 
 case class HttpConfig(
     host: String,
     port: Int,
     timeout: FiniteDuration
-)
-
-case class OneFrameConfig(
-    cacheConfig: CacheConfig
 )
 
 case class CacheConfig(

@@ -1,22 +1,20 @@
 package forex.services.rates.interpreters
 
 import cats.MonadThrow
-import cats.syntax.applicativeError._
 import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import cats.effect.Resource
 import forex.domain.{ CacheKey, Rate }
-import forex.services.rates.OneFrameAlgebra
+import forex.services.rates.{ CacheAlgebra, OneFrameAlgebra }
 import forex.services.rates.models.LookupError
 import forex.services.rates.models.LookupError.{ FromAndToAreTheSame, NoValueForKey }
-import scalacache.{ AbstractCache, Mode }
 import tofu.logging.{ Logs, ServiceLogging }
 import tofu.syntax.logging._
 
-final class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], OneFrameAlgebra[F]]](
-    cache: AbstractCache[Rate]
+final class OneFrameCachedImpl[F[_]: MonadThrow: ServiceLogging[*[_], OneFrameAlgebra[F]]](
+    cache: CacheAlgebra[F]
 ) extends OneFrameAlgebra[F] {
 
   private def getKayAndCutMeaningless(pair: Rate.Pair): Either[LookupError, CacheKey] =
@@ -25,11 +23,7 @@ final class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], OneF
 
   private def getByKey(cacheKey: CacheKey): F[Either[LookupError, Rate]] =
     debug"getting $cacheKey from the cache" >> cache
-      .get(cacheKey.value)
-      .recoverWith { err =>
-        // Somehow if caffeine is used and there is no value - I got error
-        errorCause"Cache is empty" (err).as(None)
-      }
+      .get(cacheKey)
       .map[Either[LookupError, Rate]](_.toRight(NoValueForKey(cacheKey)))
       .flatTap(
         _.fold(
@@ -45,7 +39,7 @@ final class OneFrameCachedImpl[F[_]: MonadThrow: Mode: ServiceLogging[*[_], OneF
 }
 
 object OneFrameCachedImpl {
-  def apply[F[_]: MonadThrow: Mode](cache: AbstractCache[Rate], logs: Logs[F, F]): Resource[F, OneFrameAlgebra[F]] =
+  def apply[F[_]: MonadThrow](cache: CacheAlgebra[F], logs: Logs[F, F]): Resource[F, OneFrameAlgebra[F]] =
     Resource
       .eval(logs.service[OneFrameAlgebra[F]])
       .map(implicit logs => new OneFrameCachedImpl(cache))
