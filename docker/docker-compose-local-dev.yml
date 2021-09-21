@@ -4,8 +4,6 @@ services:
     image: "redis:alpine"
   oneframe:
     image: "paidyinc/one-frame"
-    networks:
-      - proxy-local-dev
   local-proxy:
     image: "bartosso/local-proxy"
     environment:
@@ -16,9 +14,3 @@ services:
     depends_on:
       - oneframe
       - redis
-    networks:
-      - proxy-local-dev
-
-networks:
-  proxy-local-dev:
-    driver: bridge
