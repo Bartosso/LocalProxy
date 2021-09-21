@@ -1,9 +1,9 @@
 import Dependencies._
 
 name := "forex"
-version := "1.0.1"
+version := "1.0.2"
 
-scalaVersion := "2.13.5"
+scalaVersion := "2.13.6"
 scalacOptions ++= Seq(
   "-deprecation", // Emit warning and location for usages of deprecated APIs.
   "-encoding",
@@ -49,6 +49,29 @@ scalacOptions ++= Seq(
 
 resolvers +=
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+enablePlugins(DockerPlugin)
+
+//Packing jar
+assembly / mainClass := Some("forex.Main")
+assembly / assemblyJarName := "local-proxy.jar"
+
+docker / dockerfile := {
+  new Dockerfile {
+    val artifact: File     = assembly.value
+    val artifactTargetPath = s"/app/${artifact.name}"
+    from("openjdk:8-jre")
+    add(artifact, artifactTargetPath)
+    entryPoint("java", "-jar", artifactTargetPath)
+  }
+}
+
+docker / imageNames := Seq(
+  ImageName(
+    namespace = Some("forex"),
+    repository = "bartosso-local-proxy"
+  )
+)
 
 libraryDependencies ++= Seq(
   compilerPlugin(Libraries.kindProjector),
