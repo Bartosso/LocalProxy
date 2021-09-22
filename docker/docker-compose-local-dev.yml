@@ -1,4 +1,4 @@
-version: "1.1"
+version: "3"
 services:
   redis:
     image: "redis:6.2.5"
