@@ -8,6 +8,7 @@ My solution for the Paidy test task
 3. [Reasoning](./doc/Reasoning.md)
 4. [Application structure](./doc/ApplicationStructure.md)
 5. [API description](./doc/Api.md)
+6. [Configuration](./doc/Configuration.md)
 
 ## Requirements
 
@@ -19,5 +20,5 @@ My solution for the Paidy test task
 ## How to run
 There are two ways to run the application locally:
 1. Just execute `sbt run` application will use in-memory caffeine cache.
-By default, the application will search for a target on `localhost:8081`, so if you have a different target, see [this]()
+By default, the application will search for a target on `localhost:8081`, so if you have a different target, see [this](./doc/Configuration.md#cache-config)
 2. Using docker-compose, see [this](./docker/README.md)
