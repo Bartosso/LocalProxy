@@ -6,7 +6,7 @@ The application itself has three main components:
 3. **OneFrameAlgebra** - service with access to the cache
 
 And two HTTP components:
-1. **RatesHttpRoutes** - provides HTTP routes, see this [this](./Api.md) for the full description
+1. **RatesHttpRoutes** + **HealthCheckRoutes** - provides HTTP routes, see this [this](./Api.md) for the full description
 2. **OneFrameHttpClient** - consumes the One Frame API.
 
 ### CacheAlgebra
@@ -28,7 +28,7 @@ tasks doesn't contain checking the head pair's age).
 Primarily a guard around the cache. Handles situations when a user asks for the pair where fields `From` and `To` are the same
 and when there is no value for the key.
 
-### RatesHttpRoutes
+### RatesHttpRoutes + HealthCheckRoutes
 See [this](./Api.md).
 
 ### OneFrameHttpClient

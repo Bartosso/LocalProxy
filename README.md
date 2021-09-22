@@ -5,7 +5,7 @@ My solution for the Paidy test task
 
 1. [Requirements](./README.md#Requirements)
 2. [How to run](./README.md#How-to-run)
-3. [Reasoning](./doc/Reasining.md)
+3. [Reasoning](./doc/Reasoning.md)
 4. [Application structure](./doc/ApplicationStructure.md)
 5. [API description](./doc/Api.md)
 

@@ -1,8 +1,9 @@
 package forex
 
 import cats.effect.{ Concurrent, Timer }
+import cats.implicits.toSemigroupKOps
 import forex.config.ApplicationConfig
-import forex.http.rates.server.RatesHttpRoutes
+import forex.http.rates.server.{ HealthCheckRoutes, RatesHttpRoutes }
 import forex.services._
 import forex.programs._
 import org.http4s._
@@ -13,7 +14,8 @@ class Module[F[_]: Concurrent: Timer](config: ApplicationConfig, ratesService: R
 
   private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService)
 
-  private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
+  private val ratesHttpRoutes
+    : HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes <+> new HealthCheckRoutes[F].routes
 
   type PartialMiddleware = HttpRoutes[F] => HttpRoutes[F]
   type TotalMiddleware   = HttpApp[F] => HttpApp[F]
