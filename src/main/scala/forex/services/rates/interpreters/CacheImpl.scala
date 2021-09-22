@@ -26,9 +26,9 @@ class CacheImpl[F[_]: Mode: ApplicativeThrow: ServiceLogging[*[_], CacheAlgebra[
   override def put(in: Rate): F[Unit] = {
     val key = in.pair.toCacheKey
     cache.put(key.value)(in, someCacheTtl).recoverWith {
-      case NonFatal(e) => errorCause"can't put $key to the cache" (e).as(())
+      case NonFatal(e) => errorCause"can't put $key to the cache" (e).void.widen
     }
-  }.as(())
+  }.void
 
   override def get(in: CacheKey): F[Option[Rate]] =
     cache.get(in.value).recoverWith {

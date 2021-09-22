@@ -64,7 +64,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: ServiceLogging[*[_
   }
 
   override def start(): Resource[F, Unit] =
-    Resource.eval(synchronizationInit) >> updateCacheLoop.background.as(())
+    Resource.eval(synchronizationInit) >> updateCacheLoop.background.void
 }
 
 object CacheSynchronizationImpl {
