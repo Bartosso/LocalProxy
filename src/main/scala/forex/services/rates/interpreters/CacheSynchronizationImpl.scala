@@ -38,7 +38,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: ServiceLogging[*[_
   private val updateCacheLoop: F[Unit] = (Timer[F].sleep(refreshRate) >> updateCacheFun).foreverM[Unit]
 
   private val synchronizationInit =
-    info"Startup cache synchronisation" >> cache
+    info"Startup cache synchronization" >> cache
       .get(Currency.allPairs.head.toCacheKey)
       .flatMap(_.fold(updateCacheFun)(updateCacheIfItsOld))
 

@@ -1,7 +1,8 @@
 package forex.services.rates.interpreters
 
-import cats.ApplicativeThrow
+import cats.{ ApplicativeThrow, MonadThrow }
 import cats.effect.Resource
+import cats.implicits.catsSyntaxFlatMapOps
 import cats.syntax.applicativeError._
 import cats.syntax.functor._
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -37,23 +38,29 @@ class CacheImpl[F[_]: Mode: ApplicativeThrow: ServiceLogging[*[_], CacheAlgebra[
 }
 
 object CacheImpl {
-  def resource[F[_]: Mode: ApplicativeThrow](cacheConfig: CacheConfig, logs: Logs[F, F]): Resource[F, CacheImpl[F]] = {
-    val maybeRedisCache: Option[AbstractCache[Rate]] = for {
-      host <- cacheConfig.redisHost
-      port <- cacheConfig.redisPort
-    } yield RedisCache[Rate](host, port)
+  def resource[F[_]: Mode: MonadThrow](cacheConfig: CacheConfig, logs: Logs[F, F]): Resource[F, CacheImpl[F]] =
+    Resource.eval(logs.service[CacheAlgebra[F]]).flatMap { implicit logger =>
+      val maybeRedisCache: Option[AbstractCache[Rate]] = for {
+        host <- cacheConfig.redisHost
+        port <- cacheConfig.redisPort
+      } yield RedisCache[Rate](host, port)
 
-    val actualCache = maybeRedisCache.getOrElse {
-      val size = Currency.allPairs.size.toLong
-      val underlyingCaffeineCache =
-        Caffeine
-          .newBuilder()
-          .maximumSize(size)
-          .expireAfterWrite(cacheConfig.ttl.length, cacheConfig.ttl.unit)
-          .build[String, Entry[Rate]]
-      CaffeineCache(underlyingCaffeineCache)
+      val redisOrCaffeineCache = maybeRedisCache.toRight {
+        val size = Currency.allPairs.size.toLong
+        val underlyingCaffeineCache =
+          Caffeine
+            .newBuilder()
+            .maximumSize(size)
+            .expireAfterWrite(cacheConfig.ttl.length, cacheConfig.ttl.unit)
+            .build[String, Entry[Rate]]
+        CaffeineCache(underlyingCaffeineCache)
+      }
+
+      Resource.eval(
+        info"Initializing cache" >> redisOrCaffeineCache.fold(
+          caffeineCache => info"Using in-memory caffeine cache".as(new CacheImpl[F](caffeineCache, cacheConfig.ttl)),
+          redisCache => info"Using redis cache".as(new CacheImpl[F](redisCache, cacheConfig.ttl))
+        )
+      )
     }
-
-    Resource.eval(logs.service[CacheAlgebra[F]]).map(implicit logs => new CacheImpl[F](actualCache, cacheConfig.ttl))
-  }
 }
