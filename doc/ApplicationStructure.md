@@ -1,6 +1,6 @@
 # Application structure
 
-Application itself have three main components:
+The application itself has three main components:
 1. **CacheAlgebra** - represents cache itself, overall just a wrapper around the cache
 2. **CacheSynchronizationAlgebra** - service which tries to update cache every 100 seconds
 3. **OneFrameAlgebra** - service with access to the cache
