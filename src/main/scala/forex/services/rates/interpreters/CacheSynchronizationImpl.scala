@@ -7,7 +7,6 @@ import cats.syntax.functor._
 import cats.syntax.traverse._
 import cats.instances.list._
 import cats.data.NonEmptyList
-import cats.implicits.catsSyntaxApplicativeId
 import forex.config.CacheConfig
 import forex.domain.{ Currency, Rate, Timestamp }
 import forex.http.rates.client.models.in._
@@ -48,7 +47,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: ServiceLogging[*[_
     in.fold(logClientError, updateCacheWithValues)
 
   private def updateCacheWithValues(values: NonEmptyList[GetCurrencyValue]): F[Unit] =
-    values.toList.traverse(value => cache.put(value.toRate)) >> info"Cache update successfully done"
+    values.toList.traverse(value => cache.put(value.toRate)) >> info"Cache update done"
 
   private def logClientError: PartialFunction[OneFrameHttpClientError, F[Unit]] = {
     case ClientError(error) => errorCause"Can't update cache values, client error" (error)
@@ -60,7 +59,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: ServiceLogging[*[_
     val rateTime            = actualRate.timestamp
     val latestSyncThreshold = now.value.minusSeconds(refreshRate.toSeconds)
     if (rateTime.value.isBefore(latestSyncThreshold)) updateCacheFun
-    else ().pure[F]
+    else info"Cache is up to date"
   }
 
   override def start(): Resource[F, Unit] =

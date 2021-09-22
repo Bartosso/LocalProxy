@@ -1,5 +1,7 @@
 *.class
 *.log
+# Redis dump
+*.rdb
 .idea
 .bsp
-target/
+target
