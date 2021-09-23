@@ -15,10 +15,10 @@ My solution for the Paidy test task
 * SBT >= 1.5.0
 * Assuming you already have Java for `sbt` (application tested with Java 8 and 11) 
 * Docker (application uses testcontainers)
-* docker-compose for fast local run with Redis cache and one-frame dockerized image
+* docker-compose for fast local run with Redis cache and the One Frame dockerized image
 
 ## How to run
 There are two ways to run the application locally:
 1. Just execute `sbt run` application will use in-memory caffeine cache.
-By default, the application will search for a target on `localhost:8081`, so if you have a different target, see [this](./doc/Configuration.md#cache-config)
+By default, the application will search for a target on `localhost:8081`, if you have a different target, see [this](./doc/Configuration.md#cache-config)
 2. Using docker-compose, see [this](./docker/README.md)

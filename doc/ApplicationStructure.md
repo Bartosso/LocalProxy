@@ -33,4 +33,4 @@ See [this](./Api.md).
 
 ### OneFrameHttpClient
 HTTP client, which consumes the One Frame API. handles situations when there is an empty response, unknown error,
-forbidden or some proxy error.
+forbidden or some One Frame API error.
