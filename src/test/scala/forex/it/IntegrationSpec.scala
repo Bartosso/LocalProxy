@@ -63,6 +63,13 @@ class IntegrationSpec extends AnyWordSpec with Matchers with ForAllTestContainer
         errorMessages shouldBe List()
       }
     }
+
+    "return response on the healthcheck endpoint" in {
+      val invalidUri = uri"http://localhost:8080/healthcheck"
+      withAppAndClient(invalidUri) { response =>
+        response.status.code shouldBe 200
+      }
+    }
   }
 
   private def loadConfigAndSetTargetPort(): ApplicationConfig = {
