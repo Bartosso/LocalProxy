@@ -113,7 +113,7 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
         var evidence = false
         override def getCurrenciesRates(
             in: GetCurrenciesRequest
-        ): IO[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] =
+        ): IO[OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]] =
           if (!evidence) {
             evidence = true
             NonEmptyList.one(currencyValueAtTheStart).asRight[OneFrameHttpClientError].pure[IO]
@@ -136,7 +136,7 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
   }
 
   def createDummyClientWithFun(
-      fun: => Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]
+      fun: => OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]
   ): OneFrameHttpClient[IO] = (_: GetCurrenciesRequest) => IO(fun)
 
 }

@@ -95,6 +95,6 @@ class RatesHttpRoutesSpec extends AnyWordSpec with Matchers {
     }
   }
 
-  def dummyProgramWithGetResult(result: Either[RatesRequestError, Rate]): RatesProgram[IO] = _ => IO.pure(result)
+  def dummyProgramWithGetResult(result: RatesRequestError Either Rate): RatesProgram[IO] = _ => IO.pure(result)
 
 }

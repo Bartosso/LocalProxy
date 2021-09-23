@@ -17,14 +17,14 @@ final class OneFrameCachedImpl[F[_]: MonadThrow: ServiceLogging[*[_], OneFrameAl
     cache: CacheAlgebra[F]
 ) extends OneFrameAlgebra[F] {
 
-  private def getKayAndCutMeaningless(pair: Rate.Pair): Either[LookupError, CacheKey] =
+  private def getKayAndCutMeaningless(pair: Rate.Pair): LookupError Either CacheKey =
     if (pair.from == pair.to) FromAndToAreTheSame.asLeft[CacheKey]
     else pair.toCacheKey.asRight[LookupError]
 
-  private def getByKey(cacheKey: CacheKey): F[Either[LookupError, Rate]] =
+  private def getByKey(cacheKey: CacheKey): F[LookupError Either Rate] =
     debug"getting $cacheKey from the cache" >> cache
       .get(cacheKey)
-      .map[Either[LookupError, Rate]](_.toRight(NoValueForKey(cacheKey)))
+      .map[LookupError Either Rate](_.toRight(NoValueForKey(cacheKey)))
       .flatTap(
         _.fold(
           err => error"can't get $cacheKey from the cache, error - $err",
@@ -32,7 +32,7 @@ final class OneFrameCachedImpl[F[_]: MonadThrow: ServiceLogging[*[_], OneFrameAl
         )
       )
 
-  override def get(pair: Rate.Pair): F[Either[LookupError, Rate]] = {
+  override def get(pair: Rate.Pair): F[LookupError Either Rate] = {
     val maybeKey = getKayAndCutMeaningless(pair)
     maybeKey.flatTraverse(getByKey)
   }

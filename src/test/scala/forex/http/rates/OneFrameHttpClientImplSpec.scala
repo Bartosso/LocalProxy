@@ -195,7 +195,7 @@ class OneFrameHttpClientImplSpec extends AnyWordSpec with Matchers with BeforeAn
   def requestForValues(
       request: GetCurrenciesRequest,
       config: ClientConfig = dummyClientConfig
-  ): IO[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] =
+  ): IO[OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]] =
     BlazeClientBuilder[IO](global).resource.use { client =>
       OneFrameHttpClientImpl[IO](config, client).getCurrenciesRates(request)
     }

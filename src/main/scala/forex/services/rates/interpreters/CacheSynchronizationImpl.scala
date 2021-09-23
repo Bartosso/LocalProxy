@@ -42,7 +42,7 @@ final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: ServiceLogging[*[_
       .flatMap(_.fold(updateCacheFun)(updateCacheIfItsOld))
 
   private def handleClientResult(
-      in: Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]
+      in: OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]
   ): F[Unit] =
     in.fold(logClientError, updateCacheWithValues)
 

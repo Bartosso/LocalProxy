@@ -26,13 +26,13 @@ final class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Cli
 
   override def getCurrenciesRates(
       in: GetCurrenciesRequest
-  ): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] = {
+  ): F[OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]] = {
     val uri     = targetUri.withQueryParam("pair", in.currencies.toList)
     val request = Request[F](Method.GET, uri, headers = headers)
     doRequest(request).recover { case NonFatal(e) => ClientError(e).asLeft }
   }
 
-  private def doRequest(request: Request[F]): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] =
+  private def doRequest(request: Request[F]): F[OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]] =
     client
       .run(request)
       .use {
@@ -44,7 +44,7 @@ final class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Cli
 
   private def parseSuccessfulResponseBody(
       resp: Response[F]
-  ): F[Either[OneFrameHttpClientError, NonEmptyList[GetCurrencyValue]]] =
+  ): F[OneFrameHttpClientError Either NonEmptyList[GetCurrencyValue]] =
     resp
       .attemptAs[OneFrameResponse]
       .map {
@@ -55,7 +55,7 @@ final class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Cli
       }
       .foldF(_ => handleUnknownResponse(resp), _.pure[F])
 
-  private def handleUnknownResponse[R](resp: Response[F]): F[Either[OneFrameHttpClientError, R]] = {
+  private def handleUnknownResponse[R](resp: Response[F]): F[OneFrameHttpClientError Either R] = {
     val body: F[String] = resp.body.through(text.utf8Decode).compile.string
     body.map(UnknownResponse(_).asLeft[R])
   }
