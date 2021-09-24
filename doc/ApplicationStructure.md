@@ -17,7 +17,7 @@ Have one implementation
 
 Just a wrapper, since [scala cache](https://github.com/cb372/scalacache) have an ugly API 
 (key is `Any*`, requires to have `Mode` type-class at every call).
-Can contain Redis cache or Caffeine if a user didn't set up `redis-host` and `redis-port` in the config, more [here](./Configuration.md).
+Can contain Redis cache or Caffeine if a user didn't set up `redis-host` and `redis-port` in the config, more [here](./Configuration.md#cache-config).
 
 ### CacheSynchronizationAlgebra
 
@@ -30,7 +30,7 @@ Requires CacheAlgebra and OneFrameHttpClient on creating. Synchronizes cache eve
 At the first synchronization (after the application start), checks if the cache has the head pair (AUD CAD) if the cache
 is empty or the pair are older than 100 seconds - uses the One Frame API and synchronizes values, otherwise lefts cache 
 as is. Then, neglecting the result of the previous step - schedules task for synchronization (the second and following 
-tasks doesn't contain checking the head pair's age).
+tasks don't contain checking the head pair's age).
 
 ### OneFrameAlgebra
 

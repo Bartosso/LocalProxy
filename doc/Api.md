@@ -14,7 +14,8 @@ requires two query parameters:
 Both parameters shouldn't be the same. Otherwise, the user will get an empty list response
 `[]` as from the original One Frame API.
 
-If user uses unsupported currencies he will get error response with code 400 and json body like this -
+If the user uses unsupported currencies, he will get an error response with code 400 and a list of errors in
+JSON format, here is the example
 ```json
 [
     {
@@ -40,5 +41,5 @@ Example of the successful response -
 }
 ```
 
-If a target (One Frame API) is unreachable that means the cache is empty, so if a user asks proxy for the proper pair but there is no
+If a target (One Frame API) is unreachable, that means the cache is empty, so if a user asks proxy for the proper pair but there is no
 value in the cache - the user will get an empty response with status code 502.
