@@ -1,5 +1,5 @@
 # Local proxy
-My solution for the Paidy test task
+My solution for the Paidy [test task](https://github.com/paidy/interview/blob/master/Forex.md)
 
 ## Table of contents
 
