@@ -6,7 +6,6 @@ import forex.Generators
 import forex.domain.Rate
 import forex.http.rates.server.RatesHttpRoutes
 import forex.programs.RatesProgram
-import forex.domain.Utils.jsonDecoder
 import forex.domain.Utils._
 import forex.http.rates.server.models.Converters.GetApiResponseOps
 import forex.http.rates.server.models.out.{ GetApiResponse, ParseCurrencyError }

@@ -107,7 +107,7 @@ class CacheSynchronizationImplSpec extends AnyWordSpec with Matchers {
       val testCache               = new CacheImpl[IO](CaffeineCache[Rate], cacheTtl)
       val currencyValueAtTheStart = Generators.getCurrencyValue()
       val currencyUpdated         = currencyValueAtTheStart.copy(timeStamp = Timestamp.now, price = Price(90L))
-      val funRefreshRate          = 3.milliseconds
+      val funRefreshRate          = 30.milliseconds
 
       val dummyClient: OneFrameHttpClient[IO] = new OneFrameHttpClient[IO] {
         var evidence = false

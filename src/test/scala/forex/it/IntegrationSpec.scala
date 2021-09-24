@@ -6,7 +6,6 @@ import forex.Application
 import forex.http.rates.server.models.out.{ GetApiResponse, ParseCurrencyError }
 import forex.TestCodecs._
 import forex.config.{ ApplicationConfig, Config }
-import forex.domain.Utils.jsonDecoder
 import forex.domain.Utils._
 import org.http4s.FormDataDecoder.formEntityDecoder
 import org.http4s.{ Response, Uri }
