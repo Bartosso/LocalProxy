@@ -44,8 +44,8 @@ My thought process:
    the cache. Because I use indexed sequence that guarantees the order for the currency pairs, it's enough
    to just validate the head pair.
 
-   It also doesn't make sense to validate every pair, because it will use our entire daily request
-   limit for the target API (in case of continuous restarts and failures).
+   It also doesn't make sense to validate every pair and update values if any pair except the head is outdated -
+   it will use our daily request limit for the target API (in case of continuous restarts and failures).
 
 
 5. I realized that thresholds I set for the initial data age validation

@@ -11,11 +11,19 @@ And two HTTP components:
 
 ### CacheAlgebra
 
+Have one implementation
+
+#### CacheImpl
+
 Just a wrapper, since [scala cache](https://github.com/cb372/scalacache) have an ugly API 
 (key is `Any*`, requires to have `Mode` type-class at every call).
 Can contain Redis cache or Caffeine if a user didn't set up `redis-host` and `redis-port` in the config, more [here](./Configuration.md).
 
-### CacheSynchronizationAlgebra 
+### CacheSynchronizationAlgebra
+
+Have one implementation
+
+#### CacheSynchronizationImpl
 
 Requires CacheAlgebra and OneFrameHttpClient on creating. Synchronizes cache every 100 seconds by default.
 
@@ -25,6 +33,11 @@ as is. Then, neglecting the result of the previous step - schedules task for syn
 tasks doesn't contain checking the head pair's age).
 
 ### OneFrameAlgebra
+
+Have one implementation
+
+#### OneFrameCachedImpl
+
 Primarily a guard around the cache. Handles situations when a user asks for the pair where fields `From` and `To` are the same
 and when there is no value for the key.
 
@@ -32,5 +45,10 @@ and when there is no value for the key.
 See [this](./Api.md).
 
 ### OneFrameHttpClient
+
+Have one implementation
+
+#### OneFrameHttpClientImpl
+
 HTTP client, which consumes the One Frame API. handles situations when there is an empty response, unknown error,
 forbidden or some One Frame API error.

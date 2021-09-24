@@ -13,6 +13,9 @@ import forex.services.rates.models.LookupError.{ FromAndToAreTheSame, NoValueFor
 import tofu.logging.{ Logs, ServiceLogging }
 import tofu.syntax.logging._
 
+/** Primarily a guard around the cache. Handles situations when a user asks
+  * for the pair where fields From and To are the same and when there is no value for the key.
+  */
 final class OneFrameCachedImpl[F[_]: MonadThrow: ServiceLogging[*[_], OneFrameAlgebra[F]]](
     cache: CacheAlgebra[F]
 ) extends OneFrameAlgebra[F] {

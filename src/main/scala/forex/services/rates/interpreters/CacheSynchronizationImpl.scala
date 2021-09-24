@@ -21,6 +21,12 @@ import tofu.syntax.logging._
 
 import scala.concurrent.duration.{ DurationInt, FiniteDuration }
 
+/** Synchronizes cache every 100 seconds by default.
+  * At the first synchronization (after the application start), checks if the cache has the head pair (AUD CAD) if
+  * the cache is empty or the pair are older than 100 seconds - uses the OneFrameHttpClient and synchronizes values,
+  * otherwise lefts cache as is. Then, neglecting the result of the previous step - schedules task for synchronization
+  * (the second and following tasks doesn't contain checking the head pair's age).
+  */
 final class CacheSynchronizationImpl[F[_]: Timer: Concurrent: ServiceLogging[*[_], CacheSynchronizationAlgebra[F]]](
     cache: CacheAlgebra[F],
     oneFrameClient: OneFrameHttpClient[F],

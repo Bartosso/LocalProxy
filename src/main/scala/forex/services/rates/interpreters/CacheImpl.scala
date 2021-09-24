@@ -19,6 +19,9 @@ import tofu.syntax.logging._
 import scala.concurrent.duration.FiniteDuration
 import scala.util.control.NonFatal
 
+/** Just a wrapper, since scala cache have an ugly API (key is Any*, requires to have Mode type-class at every call).
+  * Can contain Redis cache or Caffeine if a user didn't set up redis-host and redis-port in the config.
+  */
 class CacheImpl[F[_]: Mode: ApplicativeThrow: ServiceLogging[*[_], CacheAlgebra[F]]](cache: AbstractCache[Rate],
                                                                                      cacheTtl: FiniteDuration)
     extends CacheAlgebra[F] {

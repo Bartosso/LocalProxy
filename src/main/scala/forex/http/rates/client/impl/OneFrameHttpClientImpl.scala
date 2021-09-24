@@ -20,6 +20,9 @@ import org.http4s.client.Client
 
 import scala.util.control.NonFatal
 
+/** HTTP client, which consumes the One Frame API.
+  * handles situations when there is an empty response, unknown error, forbidden or some One Frame API error.
+  */
 final class OneFrameHttpClientImpl[F[_]: Sync](config: ClientConfig, client: Client[F]) extends OneFrameHttpClient[F] {
   private val targetUri = Uri.unsafeFromString(s"http://${config.targetHost}:${config.targetPort}/rates")
   private val headers   = Headers.of(Header("token", config.token))
